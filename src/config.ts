@@ -4,6 +4,7 @@ import { resolve } from "node:path";
 import { isAsyncFunction } from "node:util/types";
 
 import type { Config as JestConfig } from 'jest';
+import type { UserConfig } from 'vitest/config';
 
 const VITEST_TEMPLATE = `import { defineConfig } from 'vitest/config';
 
@@ -19,7 +20,9 @@ const JEST_CONFIG = [
   'jest.config.ts',
   'jest.config.cjs',
   'jest.config.mjs',
-]
+];
+
+
 
 async function getJestConfig(): Promise<JestConfig> {
   for (const config of JEST_CONFIG) {
@@ -47,6 +50,17 @@ async function getJestConfig(): Promise<JestConfig> {
   return {};
 }
 
-(async () => {
-  await getJestConfig();
-})();
+const CONFIG_HANDLER = {
+  'coverageThreshold': convertJestCoverageThresholdToVitest,
+  'fakeTimers': convertJestTimerConfigToVitest
+};
+
+function convertJestCoverageThresholdToVitest() {
+
+}
+
+function convertJestTimerConfigToVitest() {
+
+}
+
+function mapJestConfigToVitest(jestConfig: JestConfig): UserConfig['test']
