@@ -31,5 +31,6 @@ export const VITEST_CONFIG_MAP = {
   include: 'testMatch',
   exclude: 'testPathIgnorePatterns',
   testTimeout: 'testTimeout',
-
 };
+
+export type JEST_FAKE_TIMER_KEYS = 'advanceTimers' | 'doNotFake' | 'enableGlobally' | 'legacyFakeTimers' | 'now' | 'timerLimit';

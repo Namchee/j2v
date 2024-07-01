@@ -6,6 +6,8 @@ import { isAsyncFunction } from "node:util/types";
 import type { Config as JestConfig } from 'jest';
 import type { UserConfig } from 'vitest/config';
 
+import type { JEST_FAKE_TIMER_KEYS } from './constant/config';
+
 const VITEST_TEMPLATE = `import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
@@ -55,12 +57,19 @@ const CONFIG_HANDLER = {
   'fakeTimers': convertJestTimerConfigToVitest
 };
 
-function convertJestCoverageThresholdToVitest() {
-
+function convertJestCoverageThresholdToVitest(threshold: Record<string, Record<string, number> >) {
+  return {
+    ...threshold.global,
+    ...threshold,
+  };
 }
 
-function convertJestTimerConfigToVitest() {
-
+function convertJestTimerConfigToVitest(timers: Record<JEST_FAKE_TIMER_KEYS, unknown>) {
+  return {
+    shouldAdvanceTime: Boolean(timers.advanceTimers),
+    advanceTimeDelta: Number.isNaN(Number(timers.advanceTimers)) ? undefined : timers.advanceTimers,
+    now: timers.now,
+  }
 }
 
 function mapJestConfigToVitest(jestConfig: JestConfig): UserConfig['test']
