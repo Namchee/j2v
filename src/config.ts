@@ -68,6 +68,7 @@ function convertJestTimerConfigToVitest(timers: Record<JEST_FAKE_TIMER_KEYS, unk
   return {
     shouldAdvanceTime: Boolean(timers.advanceTimers),
     advanceTimeDelta: Number.isNaN(Number(timers.advanceTimers)) ? undefined : timers.advanceTimers,
+    toFake: undefined, // write code here
     now: timers.now,
   }
 }
