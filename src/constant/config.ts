@@ -1,4 +1,6 @@
-export const VITEST_CONFIG_MAP = {
+import type { UserConfig } from "vitest/config.js";
+
+export const VITEST_CONFIG_MAP: Record<keyof UserConfig["test"], unknown> = {
   bail: 'bail',
   clearMocks: 'clearMocks',
   server: {
