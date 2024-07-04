@@ -7,6 +7,30 @@ import type { Config as JestConfig } from "jest";
 
 import { type JEST_FAKE_TIMER_KEYS, VITEST_CONFIG_MAP } from "./constant/config";
 
+function removeUndefinedKeys(obj: unknown) {
+  if (typeof obj !== 'object' || obj === null) {
+    return obj;
+  }
+
+  const newObj = Array.isArray(obj) ? [] : {};
+
+  for (const key in obj) {
+      if (Object.hasOwn(obj, key)) {
+          const value = removeUndefinedKeys(obj[key]);
+
+          if (value !== undefined) {
+              newObj[key] = value;
+          }
+      }
+  }
+
+  if (Object.keys(newObj).length === 0 && !Array.isArray(newObj)) {
+      return undefined;
+  }
+
+  return newObj;
+}
+
 const JEST_CONFIG = [
   "jest.config.js",
   "jest.config.ts",
@@ -96,6 +120,10 @@ function convertJestTimerConfigToVitest(
 
 export function transformJestConfigToVitestConfig(jestConfig: JestConfig): string {
   const mapValue = (target: string | object) => {
+    if (target as string in CONFIG_HANDLER) {
+      return CONFIG_HANDLER[target as keyof typeof CONFIG_HANDLER];
+    }
+
     if (typeof target === 'object') {
       const acc: Record<string, unknown> = {};
 
@@ -114,10 +142,12 @@ export function transformJestConfigToVitestConfig(jestConfig: JestConfig): strin
     vitestConfig[key] = mapValue(target as string | object);
   }
 
+  const cleanedConfig = removeUndefinedKeys(vitestConfig);
+
   return `import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
-  test: ${JSON.stringify(vitestConfig)}
+  test: ${JSON.stringify(cleanedConfig)}
 });
 `;
 };
