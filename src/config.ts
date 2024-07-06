@@ -1,63 +1,74 @@
 import type { Config as JestConfig } from "jest";
 import type { UserConfig } from "vitest/config";
 
-type AnyObject = Record<string, unknown> | unknown[] | null;
-type JEST_FAKE_TIMER_KEYS = 'advanceTimers' | 'doNotFake' | 'enableGlobally' | 'legacyFakeTimers' | 'now' | 'timerLimit';
+import { inspect } from "node:util";
 
-const VITEST_CONFIG_MAP: Record<keyof UserConfig["test"], unknown> = {
-  bail: 'bail',
-  clearMocks: 'clearMocks',
+type AnyObject = Record<string, unknown> | unknown[] | null;
+type JEST_FAKE_TIMER_KEYS =
+  | "advanceTimers"
+  | "doNotFake"
+  | "enableGlobally"
+  | "legacyFakeTimers"
+  | "now"
+  | "timerLimit";
+
+const VITEST_CONFIG_MAP: Record<keyof UserConfig["test"], string> = {
+  bail: "bail",
+  clearMocks: "clearMocks",
   server: {
     deps: {
-      cacheDir: 'cacheDirectory',
-    }
-  },
-  coverage: {
-    enabled: 'collectCoverage',
-    include: 'collectCoverageFrom',
-    exclude: 'coveragePathIgnorePatterns',
-    reportsDirectory: 'coverageDirectory',
-    thresholds: 'coverageThreshold',
-  },
-  coverageReporters: 'coverageReporters',
-  fakeTimers: 'fakeTimers',
-  maxConcurrency: 'maxConcurrency',
-  maxWorkers: 'maxWorkers',
-  sequence: {
-    shuffle: {
-      files: 'randomize',
+      cacheDir: "cacheDirectory",
     },
   },
-  root: 'rootDir',
-  setupFiles: 'setupFiles',
-  slowTestThreshold: 'slowTestThreshold',
-  snapshotFormat: 'snapshotFormat',
-  snapshotSerializers: 'snapshotSerializers',
-  environment: 'testEnvironment',
-  include: 'testMatch',
-  exclude: 'testPathIgnorePatterns',
-  testTimeout: 'testTimeout',
+  coverage: {
+    enabled: "collectCoverage",
+    include: "collectCoverageFrom",
+    exclude: "coveragePathIgnorePatterns",
+    reportsDirectory: "coverageDirectory",
+    thresholds: "coverageThreshold",
+  },
+  coverageReporters: "coverageReporters",
+  fakeTimers: "fakeTimers",
+  maxConcurrency: "maxConcurrency",
+  maxWorkers: "maxWorkers",
+  sequence: {
+    shuffle: {
+      files: "randomize",
+    },
+  },
+  root: "rootDir",
+  setupFiles: "setupFiles",
+  slowTestThreshold: "slowTestThreshold",
+  snapshotFormat: "snapshotFormat",
+  snapshotSerializers: "snapshotSerializers",
+  environment: "testEnvironment",
+  include: "testMatch",
+  exclude: "testPathIgnorePatterns",
+  testTimeout: "testTimeout",
 };
 
-
-const CONFIG_MAPPER = {
+const CONFIG_MAPPER: Partial<
+  // biome-ignore lint/suspicious/noExplicitAny: type is too varying
+  Record<keyof JestConfig, (value: any) => unknown>
+> = {
   coverageThreshold: convertJestCoverageThresholdToVitest,
   fakeTimers: convertJestTimerConfigToVitest,
 };
 
 function removeUndefinedKeys(obj: AnyObject) {
-  if (typeof obj !== 'object' || obj === null) {
+  if (typeof obj !== "object" || obj === null) {
     return obj;
   }
 
-  const newObj: AnyObject = {};
+  const newObj: AnyObject = Array.isArray(obj) ? [] : {};
 
   for (const key in obj) {
     if (Object.hasOwn(obj, key)) {
       const value = removeUndefinedKeys(obj[key as keyof AnyObject]);
 
       if (value !== undefined) {
-        newObj[key] = value;
+        // biome-ignore lint/suspicious/noExplicitAny: very hard to type this
+        (newObj as any)[key] = value;
       }
     }
   }
@@ -70,17 +81,26 @@ function removeUndefinedKeys(obj: AnyObject) {
 }
 
 function convertJestCoverageThresholdToVitest(
-  threshold: Record<string, Record<string, number>>,
-) {
+  threshold?: Record<string, Record<string, number>>,
+): Record<string, unknown> | undefined {
+  if (!threshold) {
+    return undefined;
+  }
+
+  const { global, ...rest } = threshold;
   return {
-    ...threshold.global,
-    ...threshold,
+    ...global,
+    ...rest,
   };
 }
 
 function convertJestTimerConfigToVitest(
-  timers: Record<JEST_FAKE_TIMER_KEYS, unknown>,
-) {
+  timers?: Record<JEST_FAKE_TIMER_KEYS, unknown>,
+): Record<string, unknown> | undefined {
+  if (!timers) {
+    return undefined;
+  }
+
   // https://jestjs.io/docs/jest-object#fake-timers
   const mockedByJest = [
     "Date",
@@ -102,27 +122,24 @@ function convertJestTimerConfigToVitest(
 
   return {
     shouldAdvanceTime: Boolean(timers.advanceTimers),
-    advanceTimeDelta: Number.isNaN(Number(timers.advanceTimers))
-      ? undefined
-      : timers.advanceTimers,
+    advanceTimeDelta:
+      typeof timers.advanceTimers === "number"
+        ? timers.advanceTimers
+        : undefined,
     toFake: timers.doNotFake
       ? mockedByJest.filter(
-        (method) => !(timers.doNotFake as string[]).includes(method),
-      )
+          (method) => !(timers.doNotFake as string[]).includes(method),
+        )
       : undefined,
     now: timers.now,
   };
 }
 
-
-
-export function transformJestConfigToVitestConfig(jestConfig: JestConfig): string {
-  const mapValue = (target: string | object) => {
-    if (target as string in CONFIG_MAPPER) {
-      return CONFIG_MAPPER[target as keyof typeof CONFIG_MAPPER];
-    }
-
-    if (typeof target === 'object') {
+export function transformJestConfigToVitestConfig(
+  jestConfig: JestConfig,
+): string {
+  const mapValue = (target: string | object): unknown => {
+    if (typeof target === "object") {
       const acc: Record<string, unknown> = {};
 
       for (const [key, val] of Object.entries(target)) {
@@ -132,22 +149,32 @@ export function transformJestConfigToVitestConfig(jestConfig: JestConfig): strin
       return acc;
     }
 
-    return jestConfig[target as keyof JestConfig];
+    const value = jestConfig[target as keyof JestConfig];
+    if (target in CONFIG_MAPPER) {
+      const mapper = CONFIG_MAPPER[target as keyof typeof CONFIG_MAPPER];
+
+      return typeof mapper === "function" ? mapper(value) : value;
+    }
+
+    return value;
   };
 
   const vitestConfig: Record<string, unknown> = {};
-  const configMap = Object.entries(VITEST_CONFIG_MAP).sort((a, b) => a[0].localeCompare(b[0]));
+  const configMap = Object.entries(VITEST_CONFIG_MAP).sort((a, b) =>
+    a[0].localeCompare(b[0]),
+  );
 
   for (const [key, target] of configMap) {
     vitestConfig[key] = mapValue(target as string | object);
   }
 
   const cleanedConfig = removeUndefinedKeys(vitestConfig);
-  const configString = JSON.stringify(cleanedConfig, null, 2).split('\n').map((value, idx) => {
-    return idx > 0
-      ? `  ${value}`
-      : value;
-  }).join('\n');
+  const configString = inspect(cleanedConfig, { compact: false })
+    .split("\n")
+    .map((value, idx) => {
+      return idx > 0 ? `  ${value}` : value;
+    })
+    .join("\n");
 
   return `import { defineConfig } from 'vitest/config';
 
@@ -155,4 +182,4 @@ export default defineConfig({
   test: ${configString}
 });
 `;
-};
+}
