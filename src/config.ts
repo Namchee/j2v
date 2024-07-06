@@ -5,68 +5,46 @@ import { isAsyncFunction } from "node:util/types";
 
 import type { Config as JestConfig } from "jest";
 
+import { tsImport } from "tsx/esm/api";
 import { type JEST_FAKE_TIMER_KEYS, VITEST_CONFIG_MAP } from "./constant/config";
 
-function removeUndefinedKeys(obj: unknown) {
+type AnyObject = Record<string, unknown> | unknown[] | null;
+
+function removeUndefinedKeys(obj: AnyObject) {
   if (typeof obj !== 'object' || obj === null) {
     return obj;
   }
 
-  const newObj = Array.isArray(obj) ? [] : {};
+  const newObj: AnyObject = {};
 
   for (const key in obj) {
-      if (Object.hasOwn(obj, key)) {
-          const value = removeUndefinedKeys(obj[key]);
+    if (Object.hasOwn(obj, key)) {
+      const value = removeUndefinedKeys(obj[key as keyof AnyObject]);
 
-          if (value !== undefined) {
-              newObj[key] = value;
-          }
+      if (value !== undefined) {
+        newObj[key] = value;
       }
+    }
   }
 
   if (Object.keys(newObj).length === 0 && !Array.isArray(newObj)) {
-      return undefined;
+    return undefined;
   }
 
   return newObj;
 }
 
-const JEST_CONFIG = [
+const JEST_JS_CONFIG = [
   "jest.config.js",
-  "jest.config.ts",
   "jest.config.cjs",
   "jest.config.mjs",
 ];
 
-async function getJestConfig(): Promise<JestConfig> {
-  for (const config of JEST_CONFIG) {
-    if (existsSync(config)) {
-      const { default: cfg } = await import(resolve(process.cwd(), config));
-      if (isAsyncFunction(cfg)) {
-        const realCfg = await cfg();
-
-        return realCfg;
-      }
-
-      return cfg;
-    }
-  }
-
-  if (existsSync(resolve(process.cwd(), "jest.config.json"))) {
-    return JSON.parse(
-      readFileSync(resolve(process.cwd(), "jest.config.json")).toString(),
-    );
-  }
-
-  const packageJson = JSON.parse(
-    readFileSync(resolve(process.cwd(), "package.json")).toString(),
-  );
-  if ("jest" in packageJson) {
-    return packageJson.jest;
-  }
-
-  return {};
-}
+const JEST_TS_CONFIG = [
+  "jest.config.ts",
+  "jest.config.cts",
+  "jest.config.mts",
+]
 
 const CONFIG_HANDLER = {
   coverageThreshold: convertJestCoverageThresholdToVitest,
@@ -111,11 +89,54 @@ function convertJestTimerConfigToVitest(
       : timers.advanceTimers,
     toFake: timers.doNotFake
       ? mockedByJest.filter(
-          (method) => !(timers.doNotFake as string[]).includes(method),
-        )
+        (method) => !(timers.doNotFake as string[]).includes(method),
+      )
       : undefined,
     now: timers.now,
   };
+}
+
+export async function getJestConfig(): Promise<JestConfig> {
+  for (const config of JEST_TS_CONFIG) {
+    if (existsSync(config)) {
+      const { default: cfg } = await tsImport(resolve(process.cwd(), config), import.meta.url);
+      if (isAsyncFunction(cfg)) {
+        const realCfg = await cfg();
+
+        return realCfg;
+      }
+
+      return cfg;
+    }
+  }
+
+  for (const config of JEST_JS_CONFIG) {
+    if (existsSync(config)) {
+      const { default: cfg } = await import(resolve(process.cwd(), config));
+      if (isAsyncFunction(cfg)) {
+        const realCfg = await cfg();
+
+        return realCfg;
+      }
+
+      return cfg;
+    }
+  }
+
+  if (existsSync(resolve(process.cwd(), "jest.config.json"))) {
+    return JSON.parse(
+      readFileSync(resolve(process.cwd(), "jest.config.json")).toString(),
+    );
+  }
+
+  const packageJson = JSON.parse(
+    readFileSync(resolve(process.cwd(), "package.json")).toString(),
+  );
+  if ("jest" in packageJson) {
+    return packageJson.jest;
+  }
+
+  return {};
 }
 
 export function transformJestConfigToVitestConfig(jestConfig: JestConfig): string {
@@ -138,16 +159,29 @@ export function transformJestConfigToVitestConfig(jestConfig: JestConfig): strin
   };
 
   const vitestConfig: Record<string, unknown> = {};
-  for (const [key, target] of Object.entries(VITEST_CONFIG_MAP)) {
+  const configMap = Object.entries(VITEST_CONFIG_MAP).sort((a, b) => a[0].localeCompare(b[0]));
+
+  for (const [key, target] of configMap) {
     vitestConfig[key] = mapValue(target as string | object);
   }
 
   const cleanedConfig = removeUndefinedKeys(vitestConfig);
+  const configString = JSON.stringify(cleanedConfig, null, 2).split('\n').map((value, idx) => {
+    return idx > 0
+      ? `  ${value}`
+      : value;
+  }).join('\n');
 
   return `import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
-  test: ${JSON.stringify(cleanedConfig)}
+  test: ${configString}
 });
 `;
 };
+
+(async () => {
+  const cfg = await getJestConfig();
+
+  console.log(cfg);
+})();

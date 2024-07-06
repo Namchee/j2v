@@ -7,6 +7,9 @@
     "allowJs": false,
     "resolveJsonModule": true,
     "moduleDetection": "force",
+    "lib": [
+      "ES2022"
+    ],
 
     "strict": true,
     "noUncheckedIndexedAccess": true,
