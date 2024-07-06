@@ -1,6 +1,7 @@
-import { describe, it } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import type { Config as JestConfig } from "jest";
+
 import { transformJestConfigToVitestConfig } from "./config";
 
 describe('transformJestConfigToVitest', () => {
@@ -17,6 +18,6 @@ describe('transformJestConfigToVitest', () => {
 
     const vitestConfig = transformJestConfigToVitestConfig(jestConfig);
 
-    console.log(vitestConfig);
+    expect(v)
   });
 });

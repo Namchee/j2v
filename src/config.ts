@@ -1,14 +1,49 @@
-import { existsSync, readFileSync } from "node:fs";
-import { resolve } from "node:path";
-
-import { isAsyncFunction } from "node:util/types";
-
 import type { Config as JestConfig } from "jest";
-
-import { tsImport } from "tsx/esm/api";
-import { type JEST_FAKE_TIMER_KEYS, VITEST_CONFIG_MAP } from "./constant/config";
+import type { UserConfig } from "vitest/config";
 
 type AnyObject = Record<string, unknown> | unknown[] | null;
+type JEST_FAKE_TIMER_KEYS = 'advanceTimers' | 'doNotFake' | 'enableGlobally' | 'legacyFakeTimers' | 'now' | 'timerLimit';
+
+const VITEST_CONFIG_MAP: Record<keyof UserConfig["test"], unknown> = {
+  bail: 'bail',
+  clearMocks: 'clearMocks',
+  server: {
+    deps: {
+      cacheDir: 'cacheDirectory',
+    }
+  },
+  coverage: {
+    enabled: 'collectCoverage',
+    include: 'collectCoverageFrom',
+    exclude: 'coveragePathIgnorePatterns',
+    reportsDirectory: 'coverageDirectory',
+    thresholds: 'coverageThreshold',
+  },
+  coverageReporters: 'coverageReporters',
+  fakeTimers: 'fakeTimers',
+  maxConcurrency: 'maxConcurrency',
+  maxWorkers: 'maxWorkers',
+  sequence: {
+    shuffle: {
+      files: 'randomize',
+    },
+  },
+  root: 'rootDir',
+  setupFiles: 'setupFiles',
+  slowTestThreshold: 'slowTestThreshold',
+  snapshotFormat: 'snapshotFormat',
+  snapshotSerializers: 'snapshotSerializers',
+  environment: 'testEnvironment',
+  include: 'testMatch',
+  exclude: 'testPathIgnorePatterns',
+  testTimeout: 'testTimeout',
+};
+
+
+const CONFIG_MAPPER = {
+  coverageThreshold: convertJestCoverageThresholdToVitest,
+  fakeTimers: convertJestTimerConfigToVitest,
+};
 
 function removeUndefinedKeys(obj: AnyObject) {
   if (typeof obj !== 'object' || obj === null) {
@@ -33,23 +68,6 @@ function removeUndefinedKeys(obj: AnyObject) {
 
   return newObj;
 }
-
-const JEST_JS_CONFIG = [
-  "jest.config.js",
-  "jest.config.cjs",
-  "jest.config.mjs",
-];
-
-const JEST_TS_CONFIG = [
-  "jest.config.ts",
-  "jest.config.cts",
-  "jest.config.mts",
-]
-
-const CONFIG_HANDLER = {
-  coverageThreshold: convertJestCoverageThresholdToVitest,
-  fakeTimers: convertJestTimerConfigToVitest,
-};
 
 function convertJestCoverageThresholdToVitest(
   threshold: Record<string, Record<string, number>>,
@@ -96,53 +114,12 @@ function convertJestTimerConfigToVitest(
   };
 }
 
-export async function getJestConfig(): Promise<JestConfig> {
-  for (const config of JEST_TS_CONFIG) {
-    if (existsSync(config)) {
-      const { default: cfg } = await tsImport(resolve(process.cwd(), config), import.meta.url);
-      if (isAsyncFunction(cfg)) {
-        const realCfg = await cfg();
 
-        return realCfg;
-      }
-
-      return cfg;
-    }
-  }
-
-  for (const config of JEST_JS_CONFIG) {
-    if (existsSync(config)) {
-      const { default: cfg } = await import(resolve(process.cwd(), config));
-      if (isAsyncFunction(cfg)) {
-        const realCfg = await cfg();
-
-        return realCfg;
-      }
-
-      return cfg;
-    }
-  }
-
-  if (existsSync(resolve(process.cwd(), "jest.config.json"))) {
-    return JSON.parse(
-      readFileSync(resolve(process.cwd(), "jest.config.json")).toString(),
-    );
-  }
-
-  const packageJson = JSON.parse(
-    readFileSync(resolve(process.cwd(), "package.json")).toString(),
-  );
-  if ("jest" in packageJson) {
-    return packageJson.jest;
-  }
-
-  return {};
-}
 
 export function transformJestConfigToVitestConfig(jestConfig: JestConfig): string {
   const mapValue = (target: string | object) => {
-    if (target as string in CONFIG_HANDLER) {
-      return CONFIG_HANDLER[target as keyof typeof CONFIG_HANDLER];
+    if (target as string in CONFIG_MAPPER) {
+      return CONFIG_MAPPER[target as keyof typeof CONFIG_MAPPER];
     }
 
     if (typeof target === 'object') {
@@ -179,9 +156,3 @@ export default defineConfig({
 });
 `;
 };
-
-(async () => {
-  const cfg = await getJestConfig();
-
-  console.log(cfg);
-})();
