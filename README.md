@@ -4,8 +4,13 @@ Jest to Vitest CLI migration tool
 
 ## Roadmap
 
-- [ ] Jest Config Migration
+- [x] Jest Config Migration
+  - [x] Configuration Converter
 - [ ] Jest Setup file migration and auto setup for JSDOM
+  - [ ] React
+  - [ ] Vue
+  - [ ] Svelte
+  - [ ] Angular
 - [ ] Test file converter
 
 ## Acknowledgments

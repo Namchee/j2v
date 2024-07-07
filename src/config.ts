@@ -1,8 +1,6 @@
 import type { Config as JestConfig } from "jest";
 import type { UserConfig } from "vitest/config";
 
-import { inspect } from "node:util";
-
 type AnyObject = Record<string, unknown> | unknown[] | null;
 type JEST_FAKE_TIMER_KEYS =
   | "advanceTimers"
@@ -137,7 +135,7 @@ function convertJestTimerConfigToVitest(
 
 export function transformJestConfigToVitestConfig(
   jestConfig: JestConfig,
-): string {
+): UserConfig["test"] {
   const mapValue = (target: string | object): unknown => {
     if (typeof target === "object") {
       const acc: Record<string, unknown> = {};
@@ -168,18 +166,5 @@ export function transformJestConfigToVitestConfig(
     vitestConfig[key] = mapValue(target as string | object);
   }
 
-  const cleanedConfig = removeUndefinedKeys(vitestConfig);
-  const configString = inspect(cleanedConfig, { compact: false })
-    .split("\n")
-    .map((value, idx) => {
-      return idx > 0 ? `  ${value}` : value;
-    })
-    .join("\n");
-
-  return `import { defineConfig } from 'vitest/config';
-
-export default defineConfig({
-  test: ${configString}
-});
-`;
+  return removeUndefinedKeys(vitestConfig) as UserConfig["test"];
 }
