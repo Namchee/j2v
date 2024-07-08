@@ -1,10 +1,13 @@
 import type { UserConfig } from "vitest/config";
 
 export type CleanupFile = {
-  plugins: string[];
   vitestImports: string[];
   imports: string[];
   code: string[];
+
+  configImports: string[];
+  plugins: string[];
+
 }
 
 export function addCleanupFiles(config: UserConfig["test"], packages: string[]): CleanupFile | undefined {
@@ -12,6 +15,7 @@ export function addCleanupFiles(config: UserConfig["test"], packages: string[]):
   const imports = [];
   const code: string[] = [];
   const plugins: string[] = [];
+  const configImports: string[] = [];
 
   const isDom = ['happy-dom', 'jsdom'].includes(config?.environment || '');
   if (!isDom) {
@@ -43,10 +47,10 @@ export function addCleanupFiles(config: UserConfig["test"], packages: string[]):
   if (hasSvelteInstalled) {
     const isSveltekit = packages.includes('@sveltejs/kit');
     if (isSveltekit) {
-      imports.push(`import { sveltekit } from '@sveltejs/kit/vite';`);
+      configImports.push(`import { sveltekit } from '@sveltejs/kit/vite';`);
       plugins.push('sveltekit()');
     } else {
-      imports.push(`import { svelte } from '@sveltejs/vite-plugin-svelte';`);
+      configImports.push(`import { svelte } from '@sveltejs/vite-plugin-svelte';`);
       plugins.push('svelte()');
     }
 
@@ -69,6 +73,7 @@ export function addCleanupFiles(config: UserConfig["test"], packages: string[]):
   return {
     vitestImports,
     imports,
+    configImports,
     code,
     plugins,
   };
