@@ -26,16 +26,23 @@ export function generateVitestConfig(config: UserConfig["test"], isTS: boolean, 
   }
 
   configContent.push(`  test: ${configString}`);
-
-  writeFileSync(resolve(process.cwd(), `vitest.config.${isTS ? 'ts' : 'js'}`), `${imports.join('\n')}
+  const configFile = `${imports.join('\n')}
 
 export default defineConfig({
 ${configContent.join('\n')}
 });
-`);
+`;
+
+  writeFileSync(resolve(process.cwd(), `vitest.config.${isTS ? 'ts' : 'js'}`), configFile);
 }
 
 export function generateSetupFile(cleanup: CleanupFile, isTS: boolean) {
-  const setupFile =
+  const setupFile = `import { ${cleanup.vitestImports.join(', ')} };
+${cleanup.imports.join('\n')}
+
+${cleanup.code}
+`;
+
+  writeFileSync(resolve(process.cwd(), `vitest-setup.${isTS ? 'ts' : 'js'}`), setupFile);
 }
 
