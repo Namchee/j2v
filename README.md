@@ -11,6 +11,8 @@ Jest to Vitest CLI migration tool
   - [x] Vue
   - [x] Svelte
   - [x] Angular
+- [ ] Script Migration
+- [ ] Dependency Migration
 - [ ] Test file converter
 
 ## Acknowledgments
