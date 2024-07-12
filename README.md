@@ -13,6 +13,9 @@ Jest to Vitest CLI migration tool
   - [x] Angular
 - [ ] Script Migration
 - [ ] Dependency Migration
+  - [x] Basic
+  - [ ] Strict (include Babel)
+- [ ] CLI
 - [ ] Test file converter
 
 ## Acknowledgments

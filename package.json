@@ -31,6 +31,7 @@
   },
   "dependencies": {
     "cac": "^6.7.14",
+    "detect-package-manager": "^3.0.2",
     "tsx": "^4.16.0"
   }
 }

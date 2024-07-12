@@ -7,7 +7,6 @@ export type CleanupFile = {
 
   configImports: string[];
   plugins: string[];
-
 }
 
 export function addCleanupFiles(config: UserConfig["test"], packages: string[]): CleanupFile | undefined {

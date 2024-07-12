@@ -11,9 +11,12 @@ importers:
       cac:
         specifier: ^6.7.14
         version: 6.7.14
-      tsup:
-        specifier: ^8.1.0
-        version: 8.1.0(postcss@8.4.38)(typescript@5.5.2)
+      detect-package-manager:
+        specifier: ^3.0.2
+        version: 3.0.2
+      tsx:
+        specifier: ^4.16.0
+        version: 4.16.0
     devDependencies:
       '@biomejs/biome':
         specifier: ^1.8.2
@@ -27,9 +30,9 @@ importers:
       jest:
         specifier: ^29.7.0
         version: 29.7.0(@types/node@20.14.9)
-      tsx:
-        specifier: ^4.16.0
-        version: 4.16.0
+      tsup:
+        specifier: ^8.1.0
+        version: 8.1.0(postcss@8.4.38)(typescript@5.5.2)
       typescript:
         specifier: ^5.5.2
         version: 5.5.2
@@ -897,6 +900,10 @@ packages:
   detect-newline@3.1.0:
     resolution: {integrity: sha512-TLz+x/vEXm/Y7P7wn1EJFNLxYpUD4TgMosxY6fAVJUnJMbupHBOncxyWUG9OpTaH9EBD7uFI5LfEgmMOc54DsA==}
     engines: {node: '>=8'}
+
+  detect-package-manager@3.0.2:
+    resolution: {integrity: sha512-8JFjJHutStYrfWwzfretQoyNGoZVW1Fsrp4JO9spa7h/fBfwgTMEIy4/LBzRDGsxwVPHU0q+T9YvwLDJoOApLQ==}
+    engines: {node: '>=12'}
 
   diff-sequences@29.6.3:
     resolution: {integrity: sha512-EjePK1srD3P08o2j4f0ExnylqRs5B9tJjcp9t1krH2qRi8CCdsYfwe9JgSLurFBWwq4uOlipzfk5fHNvwFKr8Q==}
@@ -2859,6 +2866,10 @@ snapshots:
   deepmerge@4.3.1: {}
 
   detect-newline@3.1.0: {}
+
+  detect-package-manager@3.0.2:
+    dependencies:
+      execa: 5.1.1
 
   diff-sequences@29.6.3: {}
 
