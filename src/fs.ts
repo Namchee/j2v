@@ -47,5 +47,11 @@ ${cleanup.code}
 }
 
 export function removeJestConfig(name: string) {
+  if (name.length > 0) {
+    if (name.endsWith('package.json')) {
+      //
+    } else {
 
+    }
+  }
 }
