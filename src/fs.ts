@@ -46,3 +46,6 @@ ${cleanup.code}
   writeFileSync(resolve(process.cwd(), `vitest-setup.${isTS ? 'ts' : 'js'}`), setupFile);
 }
 
+export function removeJestConfig(name: string) {
+
+}

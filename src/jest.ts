@@ -9,48 +9,78 @@ import type { Config as JestConfig } from "jest";
 const JEST_JS_CONFIG = ["jest.config.js", "jest.config.cjs", "jest.config.mjs"];
 const JEST_TS_CONFIG = ["jest.config.ts", "jest.config.cts", "jest.config.mts"];
 
-export async function getJestConfig(): Promise<JestConfig> {
+export type JestUserConfig = {
+  name: string;
+  config: JestConfig
+}
+
+export async function getJestConfig(): Promise<JestUserConfig> {
   for (const config of JEST_TS_CONFIG) {
-    if (existsSync(config)) {
+    const cfgPath = resolve(process.cwd(), config);
+
+    if (existsSync(cfgPath)) {
       const { default: cfg } = await tsImport(
-        resolve(process.cwd(), config),
+        cfgPath,
         import.meta.url,
       );
       if (isAsyncFunction(cfg)) {
-        const realCfg = await cfg();
+        const realCfg: JestConfig = await cfg();
 
-        return realCfg;
+        return {
+          name: cfgPath,
+          config: realCfg,
+        };
       }
 
-      return cfg;
+      return {
+        name: cfgPath,
+        config: cfg,
+      }
     }
   }
 
   for (const config of JEST_JS_CONFIG) {
-    if (existsSync(config)) {
-      const { default: cfg } = await import(resolve(process.cwd(), config));
+    const cfgPath = resolve(process.cwd(), config);
+
+    if (existsSync(cfgPath)) {
+      const { default: cfg } = await import(cfgPath);
       if (isAsyncFunction(cfg)) {
         const realCfg = await cfg();
 
-        return realCfg;
+        return {
+          name: cfgPath,
+          config: realCfg,
+        };
       }
 
-      return cfg;
+      return {
+        name: cfgPath,
+        config: cfg,
+      }
     }
   }
 
   if (existsSync(resolve(process.cwd(), "jest.config.json"))) {
-    return JSON.parse(
-      readFileSync(resolve(process.cwd(), "jest.config.json")).toString(),
-    );
+    return {
+      name: resolve(process.cwd(), "jest.config.json"),
+      config: JSON.parse(
+        readFileSync(resolve(process.cwd(), "jest.config.json")).toString(),
+      ),
+    };
   }
 
   const packageJson = JSON.parse(
     readFileSync(resolve(process.cwd(), "package.json")).toString(),
   );
   if ("jest" in packageJson) {
-    return packageJson.jest;
+    return {
+      name: resolve(process.cwd(), "package.json"),
+      config: packageJson.jest,
+    };
   }
 
-  return {};
+  return {
+    name: '',
+    config: {},
+  };
 }

@@ -2,7 +2,7 @@ import { describe, expect, it, } from "vitest";
 
 import type { Config as JestConfig } from "jest";
 
-import { transformJestConfigToVitestConfig } from "./config";
+import { transformJestConfigToVitestConfig } from "./mapper";
 
 describe('transformJestConfigToVitest', () => {
   it('should transform complete jest config into vitest', () => {
