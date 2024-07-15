@@ -1,4 +1,4 @@
-import { writeFileSync } from "node:fs";
+import { readFileSync, rmSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { inspect } from "node:util";
 
@@ -49,9 +49,12 @@ ${cleanup.code}
 export function removeJestConfig(name: string) {
   if (name.length > 0) {
     if (name.endsWith('package.json')) {
-      //
-    } else {
+      const json = JSON.parse(readFileSync(name).toString());
+      const { jest, ...rest } = json;
 
+      writeFileSync(name, JSON.stringify(rest, null, 2));
+    } else {
+      rmSync(name);
     }
   }
 }
