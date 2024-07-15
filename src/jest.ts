@@ -6,8 +6,7 @@ import { tsImport } from "tsx/esm/api";
 
 import type { Config as JestConfig } from "jest";
 
-const JEST_JS_CONFIG = ["jest.config.js", "jest.config.cjs", "jest.config.mjs"];
-const JEST_TS_CONFIG = ["jest.config.ts", "jest.config.cts", "jest.config.mts"];
+const JEST_CONFIG = ["jest.config.ts", "jest.config.js", "jest.config.cjs", "jest.config.mjs", "jest.config.cts", "jest.config.mts"];
 
 export type JestUserConfig = {
   name: string;
@@ -15,7 +14,7 @@ export type JestUserConfig = {
 }
 
 export async function getJestConfig(): Promise<JestUserConfig> {
-  for (const config of JEST_TS_CONFIG) {
+  for (const config of JEST_CONFIG) {
     const cfgPath = resolve(process.cwd(), config);
 
     if (existsSync(cfgPath)) {
@@ -25,27 +24,6 @@ export async function getJestConfig(): Promise<JestUserConfig> {
       );
       if (isAsyncFunction(cfg)) {
         const realCfg: JestConfig = await cfg();
-
-        return {
-          name: cfgPath,
-          config: realCfg,
-        };
-      }
-
-      return {
-        name: cfgPath,
-        config: cfg,
-      }
-    }
-  }
-
-  for (const config of JEST_JS_CONFIG) {
-    const cfgPath = resolve(process.cwd(), config);
-
-    if (existsSync(cfgPath)) {
-      const { default: cfg } = await import(cfgPath);
-      if (isAsyncFunction(cfg)) {
-        const realCfg = await cfg();
 
         return {
           name: cfgPath,
