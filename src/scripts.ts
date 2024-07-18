@@ -1,40 +1,94 @@
+type VitestCLIOption = {
+  // Vitest equivalent command. If not present, it will use the exact same command
+  command?: string;
+  // Value override
+  value?: string;
+  multi?: boolean;
+};
 
 // Maps Jest CLI options to Vitest
-const JEST_CLI_MAP = {
-  bail: ['bail'],
-  changedFilesWithAncestor: ['changed', 'HEAD~1'],
-  changedSince: ['changed'],
-  config: ['config'],
-  c: ['c'],
-  coverage: ['coverage.enabled'],
-  collectCoverage: ['coverage.enabled'],
-  coverageDirectory: ['coverage.reportsDirectory'],
-  env: ['environment'],
-  expand: ['expandSnapshotDiff'],
-  injectGlobals: ['globals'],
-  json: ['json'],
-  lastCommit: ['changed', 'HEAD~1'],
-  logHeapUsage: ['logHeapUsage'],
-  maxConcurrency: ['maxConcurrency'],
-  maxWorkers: ['maxWorkers'],
-  noStackTrace: ['printConsoleTrace', 'false'],
-  onlyChanged: ['changed', 'HEAD~1'],
-  outputFile: ['outputFile'],
-  passWithNoTests: ['passWithNoTests'],
-  randomize: ['sequence.shuffle.tests'],
-  seed: ['sequence.seed'],
-  reporters: ['coverage.reporter'],
-  roots: ['root'], // TODO: multi value
-  runInBand: ['sequence.concurrent', 'false'],
-  selectProjects: ['project'], // TODO: multi value
-  shard: ['shard'],
-  silent: ['silent'],
-  testNamePattern: ['testNamePattern'],
-  t: ['t'],
-  testPathIgnorePatterns: ['exclude'],
-  testTimeout: ['testTimeout'],
-  updateSnaphot: ['update'],
-  watch: ['watch']
+const JEST_CLI_MAP: Record<string, VitestCLIOption> = {
+  bail: {},
+  changedFilesWithAncestor: {
+    command: 'changed',
+    value: 'HEAD~1',
+  },
+  changedSince: {
+    command: 'changed',
+  },
+  config: {},
+  c: {},
+  coverage: {
+    command: 'coverage.enabled',
+  },
+  collectCoverage: {
+    command: 'coverage.enabled',
+  },
+  coverageDirectory: {
+    command: 'coverage.reportsDirectory',
+  },
+  env: {
+    command: 'environment',
+  },
+  expand: {
+    command: 'expandSnapshotDiff',
+  },
+  injectGlobals: {
+    command: 'globals',
+  },
+  json: {},
+  lastCommit: {
+    command: 'changed',
+    value: 'HEAD~1',
+  },
+  logHeapUsage: {},
+  maxConcurrency: {},
+  maxWorkers: {},
+  noStackTrace: {
+    command: 'printConsoleTrace',
+    value: 'false'
+  },
+  onlyChanged: {
+    command: 'changed',
+    value: 'HEAD~1'
+  },
+  outputFile: {},
+  passWithNoTests: {},
+  randomize: {
+    command: 'sequence.shuffle.tests'
+  },
+  seed: {
+    command: 'sequence.seed'
+  },
+  reporters: {
+    command: 'coverage.reporter',
+    multi: true,
+  },
+  roots: {
+    command: 'root',
+    multi: true,
+  },
+  runInBand: {
+    command: 'sequence.concurrent',
+    value: 'false',
+  },
+  selectProjects: {
+    command: 'project',
+    multi: true,
+  }, // TODO: multi value
+  shard: {},
+  silent: {},
+  testNamePattern: {},
+  t: {},
+  testPathIgnorePatterns: {
+    command: 'exclude',
+    multi: true,
+  },
+  testTimeout: {},
+  updateSnaphot: {
+    command: 'update',
+  },
+  watch: {},
 };
 
 function isJestCommand(command: string) {
