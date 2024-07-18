@@ -7,7 +7,8 @@
   "scripts": {
     "test": "vitest",
     "lint": "biome",
-    "build": "tsup src/config.ts --format esm"
+    "build": "tsup src/config.ts --format esm",
+    "list": "vitest list"
   },
   "keywords": [
     "jest",
