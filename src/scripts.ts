@@ -6,6 +6,8 @@ type VitestCLIOption = {
   multi?: boolean;
 };
 
+const SEPARATOR_PATTERN = /\s+([&|]+)\s+/gm;
+
 // Maps Jest CLI options to Vitest
 const JEST_CLI_MAP: Record<string, VitestCLIOption> = {
   bail: {},
@@ -91,17 +93,24 @@ const JEST_CLI_MAP: Record<string, VitestCLIOption> = {
   watch: {},
 };
 
+function separateCommands(command: string) {
+  const tokens = command.split(/\s+/).shift();
+}
+
 function isJestCommand(command: string) {
   return command.match(/^.+?jest/);
 }
 
 export function createVitestScript(scripts: Record<string, string>) {
   for (const [script, value] of Object.entries(scripts)) {
-    const commands = value.split(/\b[&|]+\b/);
+    const separators = [...value.matchAll(SEPARATOR_PATTERN)].map(val => val[1]);
+    const commands = value.split(SEPARATOR_PATTERN);
 
     for (const command of commands) {
-      if (isJestCommand(command)) {
+      const trimmedCommand = command.trim();
 
+      if (isJestCommand(trimmedCommand)) {
+        const tokens = separateCommands(trimmedCommand);
       }
     }
 
