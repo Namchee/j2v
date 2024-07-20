@@ -6,6 +6,12 @@ type VitestCLIOption = {
   multi?: boolean;
 };
 
+type CLICommand = {
+  command: string;
+  args: string[];
+  flags: Record<string, string[]>;
+}
+
 const SEPARATOR_PATTERN = /\s+([&|]+)\s+/gm;
 
 // Maps Jest CLI options to Vitest
@@ -93,8 +99,52 @@ const JEST_CLI_MAP: Record<string, VitestCLIOption> = {
   watch: {},
 };
 
-function separateCommands(command: string) {
-  const tokens = command.split(/\s+/).shift();
+function separateCommands(command: string): CLICommand {
+  const tokens = command.split(/\s+/)
+  const cli = tokens.shift();
+
+  const args: string[] = [];
+  while (!tokens[0]?.startsWith('-')) {
+    args.push(tokens.shift() as string);
+  }
+
+  const flags: Record<string, string[]> = {};
+  let arg = '';
+  const value: string[] = [];
+
+  let isScanningArgs = false;
+
+  while (tokens.length) {
+    const token = tokens.shift() as string;
+
+    if (token?.startsWith('-')) {
+      if (isScanningArgs) {
+        flags[arg] = value;
+        while (value.length) {
+          value.pop();
+        }
+
+        arg = token;
+      } else {
+        isScanningArgs = true;
+        arg = token;
+      }
+    } else {
+      if (isScanningArgs) {
+        value.push(token);
+      }
+    }
+  }
+
+  return {
+    command: cli as string,
+    args,
+    flags,
+  };
+}
+
+function separateMultiValue() {
+
 }
 
 function isJestCommand(command: string) {
