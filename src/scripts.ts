@@ -12,6 +12,11 @@ type CLICommand = {
   flags: Record<string, string[]>;
 }
 
+type Flag = {
+  flag: string;
+  value: string[];
+};
+
 const SEPARATOR_PATTERN = /\s+([&|]+)\s+/gm;
 
 // Maps Jest CLI options to Vitest
@@ -99,6 +104,22 @@ const JEST_CLI_MAP: Record<string, VitestCLIOption> = {
   watch: {},
 };
 
+function extractFlagValue(token: string): Flag {
+  if (token.indexOf('=') !== -1) {
+    const [flag, val] = token.split('=');
+
+    return {
+      flag: flag as string,
+      value: [val as string],
+    }
+  }
+
+  return {
+    flag: token,
+    value: [],
+  };
+}
+
 function separateCommands(command: string): CLICommand {
   const tokens = command.split(/\s+/)
   const cli = tokens.shift();
@@ -109,30 +130,25 @@ function separateCommands(command: string): CLICommand {
   }
 
   const flags: Record<string, string[]> = {};
-  let arg = '';
+  let flag = '';
   const value: string[] = [];
-
-  let isScanningArgs = false;
 
   while (tokens.length) {
     const token = tokens.shift() as string;
 
     if (token?.startsWith('-')) {
-      if (isScanningArgs) {
-        flags[arg] = value;
+      if (flag.length) {
+        flags[flag] = value;
         while (value.length) {
           value.pop();
         }
+      }
 
-        arg = token;
-      } else {
-        isScanningArgs = true;
-        arg = token;
-      }
+      const { flag: fl, value: val } = extractFlagValue(token);
+      flag = fl;
+      value.push(...val);
     } else {
-      if (isScanningArgs) {
-        value.push(token);
-      }
+      value.push(token);
     }
   }
 
@@ -143,8 +159,16 @@ function separateCommands(command: string): CLICommand {
   };
 }
 
-function separateMultiValue() {
+function separateMultiValue(key: string, value: string[]) {
+  const commands = [];
+  const vitestFlag = JEST_CLI_MAP[key] as string;
+  const prefix = vitestFlag.length === 1 ? '-' : '--';
 
+  for (const val of value) {
+    commands.push(`${prefix}${vitestFlag}=${val}`);
+  }
+
+  return commands;
 }
 
 function isJestCommand(command: string) {
