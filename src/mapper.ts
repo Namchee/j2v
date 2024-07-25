@@ -167,5 +167,7 @@ export function transformJestConfigToVitestConfig(
     vitestConfig[key] = mapValue(target as string | object);
   }
 
-  return removeUndefinedKeys(vitestConfig) as UserConfig["test"];
+  const cleanedConfig = removeUndefinedKeys(vitestConfig);
+
+  return cleanedConfig ? cleanedConfig as UserConfig["test"] : {};
 }
