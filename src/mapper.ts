@@ -1,4 +1,5 @@
 import type { Config as JestConfig } from "jest";
+
 import type { UserConfig } from "vitest/config";
 
 type AnyObject = Record<string, unknown> | unknown[] | null;

@@ -22,8 +22,11 @@ export async function getJestConfig(): Promise<JestUserConfig> {
         cfgPath,
         import.meta.url,
       );
-      if (isAsyncFunction(cfg)) {
-        const realCfg: JestConfig = await cfg();
+
+      if (typeof cfg === 'function') {
+        const realCfg: JestConfig = isAsyncFunction(cfg)
+          ? await cfg()
+          : cfg();
 
         return {
           name: cfgPath,
