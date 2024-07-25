@@ -31,6 +31,7 @@
     "vitest": "^1.6.0"
   },
   "dependencies": {
+    "@namchee/parsley": "^1.0.1",
     "cac": "^6.7.14",
     "detect-package-manager": "^3.0.2",
     "tsx": "^4.16.0"

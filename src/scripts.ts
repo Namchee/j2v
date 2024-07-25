@@ -1,193 +1,167 @@
+import { parseCLI } from '@namchee/parsley';
+
 type VitestCLIOption = {
   // Vitest equivalent command. If not present, it will use the exact same command
-  command?: string;
+  flag?: string;
   // Value override
   value?: string;
   multi?: boolean;
 };
 
-type CLICommand = {
-  command: string;
-  args: string[];
-  flags: Record<string, string[]>;
-}
-
-type Flag = {
-  flag: string;
-  value: string[];
-};
-
-const SEPARATOR_PATTERN = /\s+([&|]+)\s+/gm;
+const SEPARATOR_PATTERN = /\s+([&|>]+)\s+/gm;
 
 // Maps Jest CLI options to Vitest
 const JEST_CLI_MAP: Record<string, VitestCLIOption> = {
   bail: {},
   changedFilesWithAncestor: {
-    command: 'changed',
+    flag: 'changed',
     value: 'HEAD~1',
   },
   changedSince: {
-    command: 'changed',
+    flag: 'changed',
   },
   config: {},
   c: {},
   coverage: {
-    command: 'coverage.enabled',
+    flag: 'coverage.enabled',
   },
   collectCoverage: {
-    command: 'coverage.enabled',
+    flag: 'coverage.enabled',
   },
   coverageDirectory: {
-    command: 'coverage.reportsDirectory',
+    flag: 'coverage.reportsDirectory',
   },
   env: {
-    command: 'environment',
+    flag: 'environment',
   },
   expand: {
-    command: 'expandSnapshotDiff',
+    flag: 'expandSnapshotDiff',
   },
   injectGlobals: {
-    command: 'globals',
+    flag: 'globals',
   },
   json: {},
   lastCommit: {
-    command: 'changed',
+    flag: 'changed',
     value: 'HEAD~1',
   },
   logHeapUsage: {},
   maxConcurrency: {},
   maxWorkers: {},
   noStackTrace: {
-    command: 'printConsoleTrace',
+    flag: 'printConsoleTrace',
     value: 'false'
   },
   onlyChanged: {
-    command: 'changed',
+    flag: 'changed',
     value: 'HEAD~1'
   },
   outputFile: {},
   passWithNoTests: {},
   randomize: {
-    command: 'sequence.shuffle.tests'
+    flag: 'sequence.shuffle.tests'
   },
   seed: {
-    command: 'sequence.seed'
+    flag: 'sequence.seed'
   },
   reporters: {
-    command: 'coverage.reporter',
+    flag: 'coverage.reporter',
     multi: true,
   },
   roots: {
-    command: 'root',
+    flag: 'root',
     multi: true,
   },
   runInBand: {
-    command: 'sequence.concurrent',
+    flag: 'sequence.concurrent',
     value: 'false',
   },
   selectProjects: {
-    command: 'project',
+    flag: 'project',
     multi: true,
-  }, // TODO: multi value
+  },
   shard: {},
   silent: {},
   testNamePattern: {},
   t: {},
   testPathIgnorePatterns: {
-    command: 'exclude',
+    flag: 'exclude',
     multi: true,
   },
   testTimeout: {},
   updateSnaphot: {
-    command: 'update',
+    flag: 'update',
   },
   watch: {},
 };
 
-function extractFlagValue(token: string): Flag {
-  if (token.indexOf('=') !== -1) {
-    const [flag, val] = token.split('=');
-
-    return {
-      flag: flag as string,
-      value: [val as string],
-    }
-  }
-
-  return {
-    flag: token,
-    value: [],
-  };
-}
-
-function separateCommands(command: string): CLICommand {
-  const tokens = command.split(/\s+/)
-  const cli = tokens.shift();
-
-  const args: string[] = [];
-  while (!tokens[0]?.startsWith('-')) {
-    args.push(tokens.shift() as string);
-  }
-
-  const flags: Record<string, string[]> = {};
-  let flag = '';
-  const value: string[] = [];
-
-  while (tokens.length) {
-    const token = tokens.shift() as string;
-
-    if (token?.startsWith('-')) {
-      if (flag.length) {
-        flags[flag] = value;
-        while (value.length) {
-          value.pop();
-        }
-      }
-
-      const { flag: fl, value: val } = extractFlagValue(token);
-      flag = fl;
-      value.push(...val);
-    } else {
-      value.push(token);
-    }
-  }
-
-  return {
-    command: cli as string,
-    args,
-    flags,
-  };
-}
-
-function separateMultiValue(key: string, value: string[]) {
+function separateMultiValue(key: string, value: string[]): string {
   const commands = [];
   const vitestFlag = JEST_CLI_MAP[key] as string;
   const prefix = vitestFlag.length === 1 ? '-' : '--';
 
   for (const val of value) {
-    commands.push(`${prefix}${vitestFlag}=${val}`);
+    commands.push(`${prefix}${vitestFlag} ${val}`);
   }
 
-  return commands;
+  return commands.join(' ');
 }
 
 function isJestCommand(command: string) {
   return command.match(/^.+?jest/);
 }
 
-export function createVitestScript(scripts: Record<string, string>) {
+function convertCommandToVitestScript(command: string): string {
+  const newFlags: string[] = [];
+  const { flags } = parseCLI(command);
+
+  for (const [flag, value] of Object.entries(flags)) {
+    const vitestFlag = JEST_CLI_MAP[flag];
+
+    if (!vitestFlag) {
+      continue;
+    }
+
+    if (vitestFlag.multi) {
+      newFlags.push(separateMultiValue(flag, value));
+    } else {
+      const newFlag = vitestFlag.flag ?? flag;
+
+      const prefix = newFlag.length === 1 ? '-' : '--';
+
+      newFlags.push(`${prefix}${newFlag} ${value}`);
+    }
+  }
+
+  return `vitest ${newFlags.join(' ')}`
+}
+
+export function createVitestScript(scripts: Record<string, string>): Record<string, string> {
+  const newScripts: Record<string, string> = {};
+
   for (const [script, value] of Object.entries(scripts)) {
     const separators = [...value.matchAll(SEPARATOR_PATTERN)].map(val => val[1]);
     const commands = value.split(SEPARATOR_PATTERN);
 
-    for (const command of commands) {
-      const trimmedCommand = command.trim();
+    for (let idx = 0; idx < commands.length; idx++) {
+      const trimmedCommand = commands[idx]?.trim() as string;
 
       if (isJestCommand(trimmedCommand)) {
-        const tokens = separateCommands(trimmedCommand);
+        commands[idx] = convertCommandToVitestScript(trimmedCommand);
       }
     }
 
-    scripts[script] = commands.join();
+    let newCommand = '';
+
+    while (commands.length) {
+      newCommand += commands.pop();
+      if (separators.length) {
+        newCommand += ` ${separators.pop()} `;
+      }
+    }
+
+    newScripts[script] = newCommand;
   }
+
+  return newScripts;
 }
