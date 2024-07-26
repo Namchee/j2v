@@ -1,4 +1,4 @@
-import { exec, execSync } from "node:child_process";
+import { execSync } from "node:child_process";
 
 const JEST_DEPS_LIST = ["jest", "ts-jest", "@types/jest", "@jest/globals", "babel-jest"];
 
@@ -27,7 +27,7 @@ export function installVitest(
 ) {
   const shouldSkip = packages.includes("vitest");
   if (!shouldSkip) {
-    exec(`${manager} ${MANAGER_COMMAND_MAP[manager].install} -D vitest`);
+    execSync(`${manager} ${MANAGER_COMMAND_MAP[manager].install} -D vitest`);
   }
 }
 

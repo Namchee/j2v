@@ -136,7 +136,7 @@ function convertCommandToVitestScript(command: string): string {
   return `vitest ${newFlags.join(' ')}`
 }
 
-export function createVitestScript(scripts: Record<string, string>): Record<string, string> {
+export function transformJestScriptsToVitest(scripts: Record<string, string>): Record<string, string> {
   const newScripts: Record<string, string> = {};
 
   for (const [script, value] of Object.entries(scripts)) {

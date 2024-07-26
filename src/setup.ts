@@ -9,7 +9,7 @@ export type CleanupFile = {
   plugins: string[];
 };
 
-export function createDOMCleanupFile(
+export function constructDOMCleanupFile(
   config: UserConfig["test"],
   packages: string[],
 ): CleanupFile | undefined {
