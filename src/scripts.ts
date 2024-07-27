@@ -138,6 +138,7 @@ function convertCommandToVitestScript(command: string): string {
 
 export function transformJestScriptsToVitest(scripts: Record<string, string>): Record<string, string> {
   const newScripts: Record<string, string> = {};
+  let hasJest = false;
 
   for (const [script, value] of Object.entries(scripts)) {
     const separators = [...value.matchAll(SEPARATOR_PATTERN)].map(val => val[1]);
@@ -147,6 +148,7 @@ export function transformJestScriptsToVitest(scripts: Record<string, string>): R
       const trimmedCommand = commands[idx]?.trim() as string;
 
       if (isJestCommand(trimmedCommand)) {
+        hasJest = true;
         commands[idx] = convertCommandToVitestScript(trimmedCommand);
       }
     }
@@ -161,6 +163,10 @@ export function transformJestScriptsToVitest(scripts: Record<string, string>): R
     }
 
     newScripts[script] = newCommand;
+  }
+
+  if (!hasJest) {
+    newScripts["test:vitest"] = "vitest";
   }
 
   return newScripts;

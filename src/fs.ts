@@ -3,6 +3,7 @@ import { resolve } from "node:path";
 import { inspect } from "node:util";
 
 import type { UserConfig } from "vitest/config";
+
 import type { CleanupFile } from "./setup";
 
 export function generateVitestConfig(config: UserConfig["test"], isTS: boolean, cleanup: CleanupFile | undefined, ) {
