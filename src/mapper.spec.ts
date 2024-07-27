@@ -20,7 +20,7 @@ describe("transformJestConfigToVitest", () => {
     const vitestConfig = transformJestConfigToVitestConfig(jestConfig);
 
     expect(vitestConfig).toStrictEqual({
-      bail: true,
+      bail: 1,
       clearMocks: false,
       coverage: {
         enabled: true,

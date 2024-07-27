@@ -1,5 +1,14 @@
 # j2v
 
+## Proses
+
+-> cari config
+-> convert confignya
+-> bikin setup file
+-> convert test file
+-> tulis hasil confignya
+-> manage depsnya
+
 Jest to Vitest CLI migration tool
 
 ## Roadmap
@@ -25,3 +34,4 @@ Jest to Vitest CLI migration tool
 ## License
 
 This project is licensed under the [MIT License](./LICENSE)
+

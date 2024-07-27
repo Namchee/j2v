@@ -52,6 +52,7 @@ const CONFIG_MAPPER: Partial<
 > = {
   coverageThreshold: convertJestCoverageThresholdToVitest,
   fakeTimers: convertJestTimerConfigToVitest,
+  bail: convertJestBailConfigToVitest,
 };
 
 function removeUndefinedKeys(obj: AnyObject) {
@@ -132,6 +133,10 @@ function convertJestTimerConfigToVitest(
       : undefined,
     now: timers.now,
   };
+}
+
+function convertJestBailConfigToVitest(bail: number | boolean): number {
+  return typeof bail === 'boolean' ? 1 : bail;
 }
 
 export function transformJestConfigToVitestConfig(

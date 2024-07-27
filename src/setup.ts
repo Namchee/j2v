@@ -67,14 +67,9 @@ export function constructDOMCleanupFile(
   if (
     hasReactInstalled ||
     hasVueInstalled ||
-    hasSvelteInstalled ||
     hasPreactInstalled
   ) {
     vitestImports.push("afterEach");
-
-    if (code) {
-      code.push("\n");
-    }
 
     code.push(`afterEach(() => {
   cleanup();

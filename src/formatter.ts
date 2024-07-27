@@ -1,12 +1,11 @@
 import { readFileSync, rmSync, writeFileSync } from "node:fs";
-import { resolve } from "node:path";
 import { inspect } from "node:util";
 
 import type { UserConfig } from "vitest/config";
 
 import type { CleanupFile } from "./setup";
 
-export function generateVitestConfig(config: UserConfig["test"], isTS: boolean, cleanup: CleanupFile | undefined, ) {
+export function formatVitestConfig(config: UserConfig["test"], cleanup?: CleanupFile): string {
   const configString = inspect(config, { compact: false })
     .split("\n")
     .map((value, idx) => {
@@ -23,28 +22,38 @@ export function generateVitestConfig(config: UserConfig["test"], isTS: boolean, 
 
   const configContent = [];
   if (cleanup?.plugins) {
-    configContent.push(`  plugins: [${cleanup.plugins.join(', ')}]`);
+    configContent.push(`  plugins: [${cleanup.plugins.join(', ')}],`);
+  }
+
+  if (imports.length > 1) {
+    imports[0] += '\n';
   }
 
   configContent.push(`  test: ${configString}`);
-  const configFile = `${imports.join('\n')}
+  return `${imports.join('\n')}
 
 export default defineConfig({
 ${configContent.join('\n')}
 });
 `;
-
-  writeFileSync(resolve(process.cwd(), `vitest.config.${isTS ? 'ts' : 'js'}`), configFile);
 }
 
-export function generateSetupFile(cleanup: CleanupFile, isTS: boolean) {
-  const setupFile = `import { ${cleanup.vitestImports.join(', ')} };
-${cleanup.imports.join('\n')}
+export function formatSetupFile(cleanup: CleanupFile): string {
+  const parts = [];
 
-${cleanup.code}
+  if (cleanup.vitestImports.length) {
+    parts.push(`import { ${cleanup.vitestImports.join(', ')} } from 'vitest';`);
+  }
+
+  if (cleanup.imports.length) {
+    parts.push(cleanup.imports.join('\n'));
+  }
+
+  if (cleanup.code.length) {
+    parts.push(cleanup.code);
+  }
+  return `${parts.join('\n\n')}
 `;
-
-  writeFileSync(resolve(process.cwd(), `vitest-setup.${isTS ? 'ts' : 'js'}`), setupFile);
 }
 
 export function removeJestConfig(name: string) {

@@ -108,12 +108,12 @@ function separateMultiValue(key: string, value: string[]): string {
 }
 
 function isJestCommand(command: string) {
-  return command.match(/^.+?jest/);
+  return command.match(/^.*jest/);
 }
 
 function convertCommandToVitestScript(command: string): string {
   const newFlags: string[] = [];
-  const { flags } = parseCLI(command);
+  const { args, flags } = parseCLI(command);
 
   for (const [flag, value] of Object.entries(flags)) {
     const vitestFlag = JEST_CLI_MAP[flag];
@@ -133,7 +133,16 @@ function convertCommandToVitestScript(command: string): string {
     }
   }
 
-  return `vitest ${newFlags.join(' ')}`
+  const tokens = ['vitest'];
+  if (args.length) {
+    tokens.push(args.join(' '));
+  }
+
+  if (newFlags.length) {
+    tokens.push(newFlags.join(' '));
+  }
+
+  return tokens.join(' ');
 }
 
 export function transformJestScriptsToVitest(scripts: Record<string, string>): Record<string, string> {
@@ -162,7 +171,7 @@ export function transformJestScriptsToVitest(scripts: Record<string, string>): R
       }
     }
 
-    newScripts[script] = newCommand;
+    newScripts[script] = newCommand.trim();
   }
 
   if (!hasJest) {

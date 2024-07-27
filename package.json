@@ -1,6 +1,7 @@
 {
   "name": "j2v",
   "version": "1.0.0",
+  "type": "module",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -21,19 +22,20 @@
   },
   "license": "MIT",
   "devDependencies": {
-    "@biomejs/biome": "^1.8.2",
+    "@biomejs/biome": "^1.8.3",
     "@namchee/biome-config": "^1.0.1",
     "@types/jest": "^29.5.12",
-    "@types/node": "^20.14.9",
+    "@types/node": "^20.14.12",
     "jest": "^29.7.0",
-    "tsup": "^8.1.0",
-    "typescript": "^5.5.2",
+    "tsup": "^8.2.3",
+    "typescript": "^5.5.4",
     "vitest": "^2.0.4"
   },
   "dependencies": {
     "@namchee/parsley": "^1.0.1",
     "cac": "^6.7.14",
     "detect-package-manager": "^3.0.2",
-    "tsx": "^4.16.0"
+    "ora": "^8.0.1",
+    "tsx": "^4.16.2"
   }
 }
