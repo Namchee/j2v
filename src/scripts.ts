@@ -115,6 +115,8 @@ function convertCommandToVitestScript(command: string): string {
   const newFlags: string[] = [];
   const { args, flags } = parseCLI(command);
 
+  console.log(flags);
+
   for (const [flag, value] of Object.entries(flags)) {
     const vitestFlag = JEST_CLI_MAP[flag];
 
@@ -128,7 +130,7 @@ function convertCommandToVitestScript(command: string): string {
       const newFlag = vitestFlag.flag ?? flag;
 
       const prefix = newFlag.length === 1 ? '-' : '--';
-
+      const tokens = [prefix, newFlag];
       newFlags.push(`${prefix}${newFlag} ${value}`);
     }
   }
@@ -150,7 +152,6 @@ export function transformJestScriptsToVitest(scripts: Record<string, string>): R
   let hasJest = false;
 
   for (const [script, value] of Object.entries(scripts)) {
-    const separators = [...value.matchAll(SEPARATOR_PATTERN)].map(val => val[1]);
     const commands = value.split(SEPARATOR_PATTERN);
 
     for (let idx = 0; idx < commands.length; idx++) {
@@ -165,9 +166,9 @@ export function transformJestScriptsToVitest(scripts: Record<string, string>): R
     let newCommand = '';
 
     while (commands.length) {
-      newCommand += commands.pop();
-      if (separators.length) {
-        newCommand += ` ${separators.pop()} `;
+      newCommand += commands.shift();
+      if (commands.length) {
+        newCommand += ` ${commands.shift()} `;
       }
     }
 

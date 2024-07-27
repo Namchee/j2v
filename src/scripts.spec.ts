@@ -45,4 +45,32 @@ describe("transformJestScriptToVitest", () => {
       "test": "vitest src/a/**.spec.ts & vitest src/b/**.test.ts && vitest dist/c/*.ts",
     });
   });
+
+  it("should transform jest script with multiple arguments", () => {
+    const scripts = {
+      start: 'node index.js',
+      test: 'jest src/a/**.spec.ts src/b/**.test.ts',
+    };
+
+    const transformed = transformJestScriptsToVitest(scripts);
+
+    expect(transformed).toStrictEqual({
+      start: 'node index.js',
+      "test": "vitest src/a/**.spec.ts src/b/**.test.ts",
+    });
+  });
+
+  it("should transform jest script with flags", () => {
+    const scripts = {
+      start: 'node index.js',
+      test: 'jest src/a/**.spec.ts --bail --silent',
+    };
+
+    const transformed = transformJestScriptsToVitest(scripts);
+
+    expect(transformed).toStrictEqual({
+      start: 'node index.js',
+      "test": "vitest src/a/**.spec.ts --bail --silent",
+    });
+  });
 });
