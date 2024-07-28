@@ -23,7 +23,7 @@ cli
   .option("--globals", "Enable Vitest global API to your test files", {
     default: false,
   })
-  .option("-v, --verbose", "Enable verbose logging", {
+  .option("-d, --debug", "Show debugging output", {
     default: false,
   });
 
