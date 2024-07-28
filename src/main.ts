@@ -116,6 +116,8 @@ try {
   writeFileSync(configFilename, configText);
 
   Logger.debug(`Successfully written Vitest configuration file on ${configFilename}`);
+
+  spinner.succeed(kleur.green(`✨ Succesfully converted Jest test suite to Vitest. You're good to Vitest 🚀`));
 } catch (err) {
   spinner.stop();
 
