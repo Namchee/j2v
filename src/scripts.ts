@@ -97,14 +97,32 @@ const JEST_CLI_MAP: Record<string, VitestCLIOption> = {
 
 function separateMultiValue(key: string, value: string[]): string {
   const commands = [];
-  const vitestFlag = JEST_CLI_MAP[key] as string;
-  const prefix = vitestFlag.length === 1 ? '-' : '--';
+  const vitestCLI = JEST_CLI_MAP[key] as VitestCLIOption;
+  const newFlag = vitestCLI.flag ?? key;
+
+  const prefix = newFlag.length === 1 ? '-' : '--';
 
   for (const val of value) {
-    commands.push(`${prefix}${vitestFlag} ${val}`);
+    commands.push(`${prefix}${newFlag} ${val}`);
   }
 
   return commands.join(' ');
+}
+
+function extractFlag(flag: string, value: string[]): string[] {
+  const newFlags = [];
+
+  const prefix = flag.length === 1 ? '-' : '--';
+
+  if (value.length) {
+    for (const val of value) {
+      newFlags.push(`${prefix}${flag} ${val}`);
+    }
+  } else {
+    newFlags.push(`${prefix}${flag}`);
+  }
+
+  return newFlags;
 }
 
 function isJestCommand(command: string) {
@@ -114,8 +132,6 @@ function isJestCommand(command: string) {
 function convertCommandToVitestScript(command: string): string {
   const newFlags: string[] = [];
   const { args, flags } = parseCLI(command);
-
-  console.log(flags);
 
   for (const [flag, value] of Object.entries(flags)) {
     const vitestFlag = JEST_CLI_MAP[flag];
@@ -128,10 +144,9 @@ function convertCommandToVitestScript(command: string): string {
       newFlags.push(separateMultiValue(flag, value));
     } else {
       const newFlag = vitestFlag.flag ?? flag;
+      const newValue = vitestFlag.value ? [vitestFlag.value] : value;
 
-      const prefix = newFlag.length === 1 ? '-' : '--';
-      const tokens = [prefix, newFlag];
-      newFlags.push(`${prefix}${newFlag} ${value}`);
+      newFlags.push(...extractFlag(newFlag, newValue));
     }
   }
 
