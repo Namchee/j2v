@@ -75,6 +75,12 @@ describe("removeJestDeps", () => {
     expect(execSpy).toHaveBeenCalledWith("npm uninstall jest ts-jest @types/jest @jest/globals");
   });
 
+  it("should uninstall svelte-jester", () => {
+    removeJestDeps("npm", ["jest", "ts-jest", "@types/jest", "@jest/globals", "svelte-jester"]);
+
+    expect(execSpy).toHaveBeenCalledWith("npm uninstall jest ts-jest @types/jest @jest/globals svelte-jester");
+  });
+
   it("should not uninstall anything as jest doesn't exist", () => {
     removeJestDeps("npm", ["vitest"]);
 
