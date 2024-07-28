@@ -2,8 +2,10 @@
   "name": "j2v",
   "version": "1.0.0",
   "type": "module",
-  "description": "",
-  "main": "index.js",
+  "description": "Jest to Vitest CLI migration tool",
+  "bin": {
+    "j2v": "./dist/main.js"
+  },
   "scripts": {
     "test": "vitest",
     "lint": "biome",
@@ -35,6 +37,7 @@
     "@namchee/parsley": "^1.0.1",
     "cac": "^6.7.14",
     "detect-package-manager": "^3.0.2",
+    "kleur": "^4.1.5",
     "ora": "^8.0.1",
     "tsx": "^4.16.2"
   }

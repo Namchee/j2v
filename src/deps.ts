@@ -34,7 +34,7 @@ export function installVitest(
 export function removeJestDeps(
   manager: "npm" | "yarn" | "pnpm" | "bun",
   packages: string[],
-) {
+): string[] {
   const toBeUninstalled = JEST_DEPS_LIST.filter((dep) =>
     packages.includes(dep),
   );
@@ -43,4 +43,6 @@ export function removeJestDeps(
       `${manager} ${MANAGER_COMMAND_MAP[manager].remove} ${toBeUninstalled.join(" ")}`,
     );
   }
+
+  return toBeUninstalled;
 }

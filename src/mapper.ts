@@ -139,7 +139,7 @@ function convertJestBailConfigToVitest(bail: number | boolean): number {
   return typeof bail === 'boolean' ? 1 : bail;
 }
 
-export function transformJestConfigToVitestConfig(
+export function transformJestConfigToVitest(
   jestConfig: JestConfig,
 ): UserConfig["test"] {
   const mapValue = (target: string | object): unknown => {

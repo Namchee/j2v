@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import type { Config as JestConfig } from "jest";
 
-import { transformJestConfigToVitestConfig } from "./mapper";
+import { transformJestConfigToVitest } from "./mapper";
 
 describe("transformJestConfigToVitest", () => {
   it("should transform complete jest config into vitest", () => {
@@ -17,7 +17,7 @@ describe("transformJestConfigToVitest", () => {
       ci: true,
     };
 
-    const vitestConfig = transformJestConfigToVitestConfig(jestConfig);
+    const vitestConfig = transformJestConfigToVitest(jestConfig);
 
     expect(vitestConfig).toStrictEqual({
       bail: 1,
@@ -41,7 +41,7 @@ describe("transformJestConfigToVitest", () => {
       ci: true,
     };
 
-    const vitestConfig = transformJestConfigToVitestConfig(jestConfig);
+    const vitestConfig = transformJestConfigToVitest(jestConfig);
 
     expect(vitestConfig).toStrictEqual({});
   });
@@ -62,7 +62,7 @@ describe("transformJestConfigToVitest", () => {
       },
     };
 
-    const vitestConfig = transformJestConfigToVitestConfig(jestConfig);
+    const vitestConfig = transformJestConfigToVitest(jestConfig);
 
     expect(vitestConfig).toStrictEqual({
       coverage: {
@@ -88,7 +88,7 @@ describe("transformJestConfigToVitest", () => {
       },
     };
 
-    const vitestConfig = transformJestConfigToVitestConfig(jestConfig);
+    const vitestConfig = transformJestConfigToVitest(jestConfig);
 
     expect(vitestConfig).toStrictEqual({
       fakeTimers: {
@@ -105,7 +105,7 @@ describe("transformJestConfigToVitest", () => {
       },
     };
 
-    const vitestConfig = transformJestConfigToVitestConfig(jestConfig);
+    const vitestConfig = transformJestConfigToVitest(jestConfig);
 
     expect(vitestConfig).toStrictEqual({
       fakeTimers: {

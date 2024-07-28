@@ -9,7 +9,7 @@ import type { Config as JestConfig } from "jest";
 const JEST_CONFIG = ["jest.config.ts", "jest.config.js", "jest.config.cjs", "jest.config.mjs", "jest.config.cts", "jest.config.mts"];
 
 export type JestUserConfig = {
-  name: string;
+  path: string;
   config: JestConfig
 }
 
@@ -29,13 +29,13 @@ export async function getJestConfig(): Promise<JestUserConfig> {
           : cfg();
 
         return {
-          name: cfgPath,
+          path: cfgPath,
           config: realCfg,
         };
       }
 
       return {
-        name: cfgPath,
+        path: cfgPath,
         config: cfg,
       }
     }
@@ -43,25 +43,29 @@ export async function getJestConfig(): Promise<JestUserConfig> {
 
   if (existsSync(resolve(process.cwd(), "jest.config.json"))) {
     return {
-      name: resolve(process.cwd(), "jest.config.json"),
+      path: resolve(process.cwd(), "jest.config.json"),
       config: JSON.parse(
         readFileSync(resolve(process.cwd(), "jest.config.json")).toString(),
       ),
     };
   }
 
-  const packageJson = JSON.parse(
-    readFileSync(resolve(process.cwd(), "package.json")).toString(),
-  );
-  if ("jest" in packageJson) {
-    return {
-      name: resolve(process.cwd(), "package.json"),
-      config: packageJson.jest,
-    };
+  const packageJsonPath = resolve(process.cwd(), "package.json");
+  if (existsSync(packageJsonPath)) {
+    const packageJson = JSON.parse(
+      readFileSync(resolve(process.cwd(), "package.json")).toString(),
+    );
+
+    if ("jest" in packageJson) {
+      return {
+        path: resolve(process.cwd(), "package.json"),
+        config: packageJson.jest,
+      };
+    }
   }
 
   return {
-    name: '',
+    path: '',
     config: {},
   };
 }
