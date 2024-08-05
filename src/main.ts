@@ -87,7 +87,9 @@ try {
 
     const uninstalled = removeJestDeps(packageManager, dependencies);
 
-    Logger.debug(`Successfully uninstalled ${uninstalled.join(', ')}`);
+    if (uninstalled.length) {
+      Logger.debug(`Successfully uninstalled ${uninstalled.join(', ')}`);
+    }
   } else {
     Logger.info("package.json not found, skipping scripts transformation and dependency cleanup.");
   }
