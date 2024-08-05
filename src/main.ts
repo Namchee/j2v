@@ -4,8 +4,8 @@ import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 
 import cac from "cac";
-import kleur from "kleur";
 import ora from "ora";
+import color from "picocolors";
 
 import { detect } from "detect-package-manager";
 
@@ -28,9 +28,10 @@ cli
   });
 
 const args = cli.parse();
-const spinner = ora().start(kleur.green("Finding Jest config..."));
+// force new line
+const spinner = ora().start(color.green("Finding Jest config...\n"));
 
-Logger.init(args.options.verbose);
+Logger.init(args.options.debug);
 
 try {
   const { path, config } = await getJestConfig();
@@ -41,7 +42,7 @@ try {
       : "Jest configuration not found. Using default settings.",
   );
 
-  spinner.text = kleur.green(
+  spinner.text = color.green(
     "Configuring Vitest based on Jest configuration...",
   );
 
@@ -51,11 +52,11 @@ try {
 
   Logger.debug("Vitest configuration generated");
 
-  spinner.text = kleur.green("Transforming test files...");
+  spinner.text = color.green("Transforming test files...");
 
   // TODO: write transformer script here...
 
-  spinner.text = kleur.green("Transforming package's scripts...");
+  spinner.text = color.green("Transforming package's scripts...");
   const packageJsonPath = resolve(process.cwd(), "package.json");
 
   if (existsSync(packageJsonPath)) {
@@ -63,7 +64,7 @@ try {
 
     const packageManager = await detect();
     const packageJson = JSON.parse(readFileSync(packageJsonPath).toString());
-    const dependencies = [...packageJson.dependencies, ...packageJson.devDependencies];
+    const dependencies = [...Object.keys(packageJson.dependencies), ...Object.keys(packageJson.devDependencies)];
 
     if (!dependencies.includes("typescript")) {
       isTS = false;
@@ -72,15 +73,15 @@ try {
     const newScripts = transformJestScriptsToVitest(packageJson.scripts);
     packageJson.scripts = newScripts;
 
-    writeFileSync(packageJson, JSON.stringify(packageJson, null, 2));
+    writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2));
 
     Logger.debug("package.json scripts rewritten");
 
     setupFile = constructDOMCleanupFile(vitestConfig, dependencies);
 
-    spinner.text = kleur.green("Performing dependency cleanup...");
+    spinner.text = color.green("Performing dependency cleanup...");
 
-    installVitest(packageManager, [...packageJson.dependencies, ...packageJson.devDependencies]);
+    installVitest(packageManager, dependencies);
 
     Logger.debug("Vitest successfully installed");
 
@@ -117,9 +118,11 @@ try {
 
   Logger.debug(`Successfully written Vitest configuration file on ${configFilename}`);
 
-  spinner.succeed(kleur.green(`✨ Succesfully converted Jest test suite to Vitest. You're good to Vitest 🚀`));
+  spinner.succeed(color.green(`✨ Succesfully converted Jest test suite to Vitest. You're good to Vitest 🚀`));
 } catch (err) {
   spinner.stop();
 
-  Logger.error(err as Error);
+  const error = err as Error;
+
+  Logger.error(error);
 }

@@ -1,4 +1,4 @@
-import kleur from "kleur";
+import color from "picocolors";
 
 export class Logger {
   private static instance: Logger;
@@ -11,19 +11,19 @@ export class Logger {
 
   public static debug(text: string) {
     if (Logger.instance.verbose) {
-      console.log(kleur.gray(text));
+      console.log(color.gray(text));
     }
   }
 
   public static info(text: string) {
-    console.log(kleur.blue(text));
+    console.log(color.blue(text));
   }
 
   public static error(err: string | Error) {
-    console.error(`❌ ${kleur.red(err instanceof Error ? err.message : err)}`);
+    console.error(`❌ ${color.red(err instanceof Error ? err.message : err)}`);
   }
 
   public static success(text: string) {
-    console.log(`✔ ${kleur.green(text)}`);
+    console.log(`✔ ${color.green(text)}`);
   }
 }
