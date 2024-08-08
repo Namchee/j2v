@@ -18,6 +18,9 @@ import { transformJestConfigToVitest } from "./mapper";
 import { transformJestScriptsToVitest } from "./scripts";
 import { type CleanupFile, constructDOMCleanupFile } from "./setup";
 
+const wait = (ms: number) =>
+  new Promise((resolve, reject) => setTimeout(resolve, ms));
+
 const cli = cac();
 cli
   .option("--globals", "Enable Vitest global API to your test files", {
@@ -29,7 +32,7 @@ cli
 
 const args = cli.parse();
 // force new line
-const spinner = ora().start(color.green("Finding Jest config...\n"));
+const spinner = ora(color.green("Finding Jest config...\n")).start();
 
 Logger.init(args.options.debug);
 
@@ -42,9 +45,13 @@ try {
       : "Jest configuration not found. Using default settings.",
   );
 
+  await wait(5_000);
+
   spinner.text = color.green(
     "Configuring Vitest based on Jest configuration...",
   );
+
+  await wait(5_000);
 
   const vitestConfig = transformJestConfigToVitest(config);
   let setupFile: CleanupFile | undefined;
@@ -64,7 +71,10 @@ try {
 
     const packageManager = await detect();
     const packageJson = JSON.parse(readFileSync(packageJsonPath).toString());
-    const dependencies = [...Object.keys(packageJson.dependencies), ...Object.keys(packageJson.devDependencies)];
+    const dependencies = [
+      ...Object.keys(packageJson.dependencies),
+      ...Object.keys(packageJson.devDependencies),
+    ];
 
     if (!dependencies.includes("typescript")) {
       isTS = false;
@@ -88,17 +98,19 @@ try {
     const uninstalled = removeJestDeps(packageManager, dependencies);
 
     if (uninstalled.length) {
-      Logger.debug(`Successfully uninstalled ${uninstalled.join(', ')}`);
+      Logger.debug(`Successfully uninstalled ${uninstalled.join(", ")}`);
     }
   } else {
-    Logger.info("package.json not found, skipping scripts transformation and dependency cleanup.");
+    Logger.info(
+      "package.json not found, skipping scripts transformation and dependency cleanup.",
+    );
   }
 
   spinner.text = "Writing Vitest config (and setup files)...";
 
   if (setupFile) {
     const setupText = formatSetupFile(setupFile);
-    const setupFilename = `vitest.setup.${isTS ? 'ts' : 'js'}`;
+    const setupFilename = `vitest.setup.${isTS ? "ts" : "js"}`;
 
     if (Array.isArray(vitestConfig?.setupFiles)) {
       vitestConfig.setupFiles.push(`./${setupFilename}`);
@@ -110,17 +122,28 @@ try {
 
     Logger.debug(`Successfully written Vitest setup file on ${setupFilepath}`);
   } else {
-    Logger.debug("Setup file is not necessary as target environment is not DOM.");
+    Logger.debug(
+      "Setup file is not necessary as target environment is not DOM.",
+    );
   }
 
   const configText = formatVitestConfig(vitestConfig);
-  const configFilename = resolve(process.cwd(), `vitest.config.${isTS ? 'ts' : 'js'}`);
+  const configFilename = resolve(
+    process.cwd(),
+    `vitest.config.${isTS ? "ts" : "js"}`,
+  );
 
   writeFileSync(configFilename, configText);
 
-  Logger.debug(`Successfully written Vitest configuration file on ${configFilename}`);
+  Logger.debug(
+    `Successfully written Vitest configuration file on ${configFilename}`,
+  );
 
-  spinner.succeed(color.green(`✨ Succesfully converted Jest test suite to Vitest. You're good to Vitest 🚀`));
+  spinner.succeed(
+    color.green(
+      `✨ Succesfully converted Jest test suite to Vitest. You're good to Vitest 🚀`,
+    ),
+  );
 } catch (err) {
   spinner.stop();
 
