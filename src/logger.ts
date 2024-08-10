@@ -11,7 +11,7 @@ export class Logger {
 
   public static debug(text: string) {
     if (Logger.instance.verbose) {
-      console.log(`  ${color.gray(text)}`);
+      console.log(color.gray(`  [DEBUG] ${text}`));
     }
   }
 

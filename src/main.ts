@@ -4,7 +4,7 @@ import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 
 import cac from "cac";
-import ora from "ora";
+import { createSpinner } from "nanospinner";
 import color from "picocolors";
 
 import { detect } from "detect-package-manager";
@@ -18,9 +18,6 @@ import { transformJestConfigToVitest } from "./mapper";
 import { transformJestScriptsToVitest } from "./scripts";
 import { type CleanupFile, constructDOMCleanupFile } from "./setup";
 
-const wait = (ms: number) =>
-  new Promise((resolve, reject) => setTimeout(resolve, ms));
-
 const cli = cac();
 cli
   .option("--globals", "Enable Vitest global API to your test files", {
@@ -32,7 +29,9 @@ cli
 
 const args = cli.parse();
 // force new line
-const spinner = ora(color.green("Finding Jest config...\n")).start();
+const spinner = createSpinner(color.green("Finding Jest config...\n"), {
+  color: "green",
+}).start();
 
 Logger.init(args.options.debug);
 
@@ -45,13 +44,10 @@ try {
       : "Jest configuration not found. Using default settings.",
   );
 
-  await wait(5_000);
-
-  spinner.text = color.green(
-    "Configuring Vitest based on Jest configuration...",
-  );
-
-  await wait(5_000);
+  spinner.update({
+    text: color.green("Configuring Vitest based on Jest configuration...\n"),
+    color: "green",
+  });
 
   const vitestConfig = transformJestConfigToVitest(config);
   let setupFile: CleanupFile | undefined;
@@ -59,11 +55,17 @@ try {
 
   Logger.debug("Vitest configuration generated");
 
-  spinner.text = color.green("Transforming test files...");
+  spinner.update({
+    text: color.green("Transforming test files...\n"),
+    color: "green",
+  });
 
   // TODO: write transformer script here...
 
-  spinner.text = color.green("Transforming package's scripts...");
+  spinner.update({
+    text: color.green("Transforming package's scripts...\n"),
+    color: "green",
+  });
   const packageJsonPath = resolve(process.cwd(), "package.json");
 
   if (existsSync(packageJsonPath)) {
@@ -89,7 +91,10 @@ try {
 
     setupFile = constructDOMCleanupFile(vitestConfig, dependencies);
 
-    spinner.text = color.green("Performing dependency cleanup...");
+    spinner.update({
+      text: color.green("Performing dependency cleanup...\n"),
+      color: "green",
+    });
 
     installVitest(packageManager, dependencies);
 
@@ -106,7 +111,10 @@ try {
     );
   }
 
-  spinner.text = "Writing Vitest config (and setup files)...";
+  spinner.update({
+    text: color.green("Writing Vitest config (and setup files)...\n"),
+    color: "green",
+  });
 
   if (setupFile) {
     const setupText = formatSetupFile(setupFile);
@@ -139,15 +147,17 @@ try {
     `Successfully written Vitest configuration file on ${configFilename}`,
   );
 
-  spinner.succeed(
-    color.green(
-      `✨ Succesfully converted Jest test suite to Vitest. You're good to Vitest 🚀`,
+  spinner.success({
+    text: color.green(
+      `✨ Succesfully converted Jest test suite to Vitest. You're good to Vitest 🚀\n`,
     ),
-  );
+  });
 } catch (err) {
-  spinner.stop();
-
   const error = err as Error;
+
+  spinner.error({
+    text: color.red(`❌ Transformation failed due to ${error.message}\n`),
+  });
 
   Logger.error(error);
 }
