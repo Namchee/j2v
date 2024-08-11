@@ -16,7 +16,12 @@ import { formatSetupFile, formatVitestConfig } from "./formatter";
 import { getJestConfig } from "./jest";
 import { transformJestConfigToVitest } from "./mapper";
 import { transformJestScriptsToVitest } from "./scripts";
-import { type CleanupFile, constructDOMCleanupFile } from "./setup";
+import { constructDOMCleanupFile } from "./setup";
+import { getTestFiles } from "./test";
+import { transformJestTestToVitest } from "./transformer";
+
+import type { CleanupFile } from "./setup";
+
 
 const cli = cac();
 cli
@@ -61,6 +66,8 @@ try {
   });
 
   // TODO: write transformer script here...
+  const testFiles = await getTestFiles(vitestConfig);
+  const transformedTests = await transformJestTestToVitest(testFiles, vitestConfig);
 
   spinner.update({
     text: color.green("Transforming package's scripts...\n"),
