@@ -5,7 +5,7 @@ import type { TestFile } from "./test";
 type VitestUtil = {
   name: string;
   // biome-ignore lint/suspicious/noExplicitAny: options cannot be typed
-  fn?: (args: any[]) => unknown;
+  fn?: (args: any[]) => string;
 }
 
 const JEST_GLOBALS = ['afterAll', 'afterEach', 'beforeAll', 'beforeEach', 'describe', 'test', 'it', 'expect'];
@@ -41,6 +41,10 @@ const JEST_UTILS: Record<string, VitestUtil> = {
   },
 };
 
+function isPlaywrightTest(source: string) {
+  return /'@playwright\/test'/.test(source);
+}
+
 function getJestGlobals(source: SourceFile): string[] {
   const globals = [];
   const expressions = source.getDescendantsOfKind(SyntaxKind.CallExpression);
@@ -66,11 +70,11 @@ function transformJestUtils(source: SourceFile): boolean {
     const prop = identifiers[1];
 
     if (object?.getText() === 'jest' && prop && prop.getText() in JEST_UTILS) {
+      const mapped = JEST_UTILS[prop.getText()];
+      const args = expression.getNextSiblings();
       hasUtils = true;
 
-      expression.setExpression(`vi.${JEST_UTILS[prop.getText()]}()`)
-
-      identifiers.forEach(id => console.log(id.getText()));
+      expression.setExpression(`vi.${mapped?.name}(${mapped?.fn ? mapped.fn().join(', ') : })`)
     }
   }
 
@@ -86,6 +90,10 @@ function addImportDeclaration(source: SourceFile, globals: string[]) {
 
 export function transformJestTestToVitest(testFiles: TestFile[], useGlobals = false) {
   for (const file of testFiles) {
+    if (isPlaywrightTest(file.content)) {
+      continue;
+    }
+
     const project = new Project();
     const source = project.createSourceFile(file.path, file.content);
 
