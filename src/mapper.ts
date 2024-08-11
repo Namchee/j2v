@@ -141,6 +141,7 @@ function convertJestBailConfigToVitest(bail: number | boolean): number {
 
 export function transformJestConfigToVitest(
   jestConfig: JestConfig,
+  useGlobal = false,
 ): UserConfig["test"] {
   const mapValue = (target: string | object): unknown => {
     if (typeof target === "object") {
@@ -170,6 +171,10 @@ export function transformJestConfigToVitest(
 
   for (const [key, target] of configMap) {
     vitestConfig[key] = mapValue(target as string | object);
+  }
+
+  if (useGlobal) {
+    vitestConfig.globals = true;
   }
 
   const cleanedConfig = removeUndefinedKeys(vitestConfig);

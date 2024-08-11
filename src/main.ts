@@ -54,7 +54,7 @@ try {
     color: "green",
   });
 
-  const vitestConfig = transformJestConfigToVitest(config);
+  const vitestConfig = transformJestConfigToVitest(config, args.options.globals);
   let setupFile: CleanupFile | undefined;
   let isTS = true;
 
@@ -67,7 +67,7 @@ try {
 
   // TODO: write transformer script here...
   const testFiles = await getTestFiles(vitestConfig);
-  const transformedTests = await transformJestTestToVitest(testFiles, vitestConfig);
+  const transformedTests = await transformJestTestToVitest(testFiles, args.options.globals);
 
   spinner.update({
     text: color.green("Transforming package's scripts...\n"),

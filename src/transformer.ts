@@ -1,7 +1,5 @@
 import type { TestFile } from "./test";
 
-import type { UserConfig } from "vitest/config";
-
-export function transformJestTestToVitest(testFiles: TestFile[], config: UserConfig["test"]): TestFile[] {
+export async function transformJestTestToVitest(testFiles: TestFile[], useGlobals = false): TestFile[] {
   return [];
 }
