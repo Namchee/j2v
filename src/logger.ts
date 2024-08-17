@@ -23,6 +23,10 @@ export class Logger {
     console.error(`❌ ${color.red(err instanceof Error ? err.message : err)}`);
   }
 
+  public static warning(text: string) {
+    console.log(color.yellow(`  ⚠️${text}`));
+  }
+
   public static success(text: string) {
     console.log(`✔ ${color.green(text)}`);
   }

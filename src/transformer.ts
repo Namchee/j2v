@@ -16,7 +16,7 @@ const TRANSFORMER: Record<string, TransformerFn> = {
     }
 
     if (args[1]?.getKind() !== SyntaxKind.ObjectLiteralExpression) {
-      Logger.info(`j2v cannot transform \`jest.mocked\` on line ${expr.getStartLineNumber(true)} in \`${source.getBaseName()}\` correctly. You might want to transform it manually`);
+      Logger.warning(`j2v cannot transform \`jest.mocked\` on line ${expr.getStartLineNumber(true)} in \`${source.getBaseName()}\` correctly. You might want to transform it manually`);
     }
 
     const props = args[1]?.getChildrenOfKind(SyntaxKind.PropertyAssignment);
@@ -85,8 +85,6 @@ function transformJestUtils(source: SourceFile): boolean {
 
     hasUtils = true;
   }
-
-  console.log(source.getFullText());
 
   return hasUtils;
 }
