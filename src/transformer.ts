@@ -1,45 +1,41 @@
-import { Project, type SourceFile, SyntaxKind } from "ts-morph";
+import { type CallExpression, Project, type SourceFile, SyntaxKind, } from "ts-morph";
 
+import { Logger } from "./logger";
 import type { TestFile } from "./test";
 
-type VitestUtil = {
-  name: string;
-  // biome-ignore lint/suspicious/noExplicitAny: options cannot be typed
-  fn?: (args: any[]) => string;
-}
+type TransformerFn = (source: SourceFile, expr: CallExpression) => void;
 
 const JEST_GLOBALS = ['afterAll', 'afterEach', 'beforeAll', 'beforeEach', 'describe', 'test', 'it', 'expect'];
-const JEST_UTILS: Record<string, VitestUtil> = {
-  fn: {
-    name: 'fn',
-  },
-  spyOn: {
-    name: 'spyOn'
-  },
-  clearAllMocks: {
-    name: 'clearAllMocks'
-  },
-  resetAllMocks: {
-    name: 'resetAllMocks',
-  },
-  restoreAllMocks: {
-    name: 'restoreAllMocks',
-  },
-  mocked: {
-    name: 'mocked',
-    // biome-ignore lint/suspicious/noExplicitAny: cannot be typed
-    fn: (args: any[]) => {
-      args[1] = !!args[1]?.shallow;
-      return args;
-    },
-  },
-  useFakeTimers: {
-    name: 'useFakeTimers',
-  },
-  useRealTimers: {
-    name: 'useRealTimers',
-  },
-};
+const TRANSFORMER: Record<string, TransformerFn> = {
+  mocked: (source: SourceFile, expr: CallExpression) => {
+    expr.setExpression('vi.mocked');
+
+    const args = expr.getArguments();
+    if (args.length !== 2) {
+      return;
+    }
+
+    if (args[1]?.getKind() !== SyntaxKind.ObjectLiteralExpression) {
+      Logger.info(`j2v cannot transform \`jest.mocked\` on line ${expr.getStartLineNumber(true)} in \`${source.getBaseName()}\` correctly. You might want to transform it manually`);
+    }
+
+    const props = args[1]?.getChildrenOfKind(SyntaxKind.PropertyAssignment);
+    if (!props) {
+      return;
+    }
+
+    for (const prop of props) {
+      const identifier = prop.getFirstChildByKind(SyntaxKind.Identifier);
+
+      if (identifier?.getText() === 'shallow') {
+        const value = args[1]?.getChildrenOfKind(SyntaxKind.FalseKeyword);
+
+        expr.insertArgument(1, value?.length ? 'true' : 'false');
+        expr.removeArgument(2);
+      }
+    }
+  }
+}
 
 function isPlaywrightTest(source: string) {
   return /'@playwright\/test'/.test(source);
@@ -62,21 +58,35 @@ function getJestGlobals(source: SourceFile): string[] {
 
 function transformJestUtils(source: SourceFile): boolean {
   let hasUtils = false;
-  const expressions = source.getDescendantsOfKind(SyntaxKind.PropertyAccessExpression);
+  const expressions = source.getDescendantsOfKind(SyntaxKind.CallExpression);
 
   for (const expression of expressions) {
-    const identifiers = expression.getChildrenOfKind(SyntaxKind.Identifier);
-    const object = identifiers[0];
-    const prop = identifiers[1];
+    const callExpression = expression.getFirstChildIfKind(SyntaxKind.PropertyAccessExpression);
 
-    if (object?.getText() === 'jest' && prop && prop.getText() in JEST_UTILS) {
-      const mapped = JEST_UTILS[prop.getText()];
-      const args = expression.getNextSiblings();
-      hasUtils = true;
-
-      expression.setExpression(`vi.${mapped?.name}(${mapped?.fn ? mapped.fn().join(', ') : })`)
+    if (!callExpression) {
+      continue;
     }
+
+    const callChildren = callExpression.getChildren();
+    const sourceObject = callChildren[0];
+    const method = callChildren[2];
+
+    if (sourceObject?.getText() !== 'jest' || !method) {
+      continue;
+    }
+
+    const fn = TRANSFORMER[method.getText()];
+
+    if (fn) {
+      fn(source, expression);
+    } else {
+      expression.setExpression(`vi.${method.getText()}`);
+    }
+
+    hasUtils = true;
   }
+
+  console.log(source.getFullText());
 
   return hasUtils;
 }
@@ -122,7 +132,16 @@ const content = `describe('arithmetic', () => {
 
   test('should return 2', () => {
     const result = 1 + 1;
+    const a = true;
 
+    const b = { shallow: true };
+    const spy = jest.spyOn(video, 'play');
+    const mocked = jest.mocked(video, b);
+    const sample = jest.mocked(video, { shallow: true });
+
+    const c = jest.mocked(video);
+
+    jest.mocked(song, { })
     expect(result).toBe(2);
   });
 });
