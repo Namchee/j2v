@@ -137,6 +137,7 @@ const JEST_UTILS: Record<string, VitestUtil> = {
     }
   },
 };
+const JEST_TYPES = ["Mock", "Mocked", "Replaced", "Spied"];
 
 function isPlaywrightTest(source: string) {
   return /'@playwright\/test'/.test(source);
@@ -160,6 +161,8 @@ function getJestGlobals(source: SourceFile): string[] {
 function transformJestUtils(source: SourceFile): boolean {
   let hasUtils = false;
   const expressions = source.getDescendantsOfKind(SyntaxKind.CallExpression);
+
+  console.log('here');
 
   for (const expression of expressions) {
     const callExpression = expression.getFirstChildIfKind(
@@ -186,18 +189,36 @@ function transformJestUtils(source: SourceFile): boolean {
       } else {
         expression.setExpression(`vi.${mapping}`);
       }
+
+      hasUtils = true;
     } else {
       const parent = expression.getParent();
       if (parent) {
         source.removeText();
       }
     }
-
-    hasUtils = true;
   }
 
   return hasUtils;
 }
+
+function transformJestTypes(source: SourceFile): boolean {
+  let hasJestTypes = false;
+  const typeRefs = source.getDescendantsOfKind(SyntaxKind.TypeReference);
+
+  for (const typeRef of typeRefs) {
+    const typeName = typeRef.getTypeName();
+    const namespace = typeName.getFirstChild();
+    const typeProp = typeName.getLastChild();
+
+    if (namespace?.getText() === 'jest' && typeProp && JEST_TYPES.includes(typeProp.getText())) {
+      typeName.replaceWithText(`vi.${typeProp.getText()}`);
+      hasJestTypes = true;
+    }
+  }
+
+  return hasJestTypes;
+};
 
 function addImportDeclaration(source: SourceFile, globals: string[]) {
   source.addImportDeclaration({
@@ -212,50 +233,50 @@ export function transformJestTestToVitest(
 ) {
   for (const file of testFiles) {
     if (isPlaywrightTest(file.content)) {
+      Logger.debug(`Skipped ${file.path} as it's a Playwright-based test`);
       continue;
     }
 
     const project = new Project();
     const source = project.createSourceFile(file.path, file.content);
 
-    const globals = getJestGlobals(source);
     const hasUtils = transformJestUtils(source);
+    const hasTypes = transformJestTypes(source);
 
-    if (hasUtils) {
-      globals.push("vi");
-    }
+    const imports = hasUtils || hasTypes
+      ? ["vi"]
+      : [];
 
     if (!useGlobals) {
-      addImportDeclaration(source, globals);
+      imports.push(...getJestGlobals(source));
+    }
+
+    if (imports.length) {
+      addImportDeclaration(source, imports);
     }
   }
 }
 
 const path = "some/random/path.ts";
-const content = `describe('arithmetic', () => {
-  beforeAll(() => {
-    console.log("I'm executed before all!");
-  });
+const content = `import {expect, jest, test} from '@jest/globals';
+import type {fetch} from 'node-fetch';
 
-  afterEach(() => {
-    jest.restoreAllMocks();
-  });
+jest.mock('node-fetch');
 
-  test('should return 2', () => {
-    const result = 1 + 1;
-    const a = true;
+let mockedFetch: jest.Mocked<typeof fetch>;
 
-    const b = { shallow: true };
-    const spy = jest.spyOn(video, 'play');
-    const mocked = jest.mocked(video, b);
-    const sample = jest.mocked(video, { shallow: true });
-
-    const c = jest.mocked(video);
-
-    jest.mocked(song, { })
-    expect(result).toBe(2);
-  });
+afterEach(() => {
+  mockedFetch.mockClear();
 });
-`;
+
+test('makes correct call', () => {
+  mockedFetch = getMockedFetch();
+  // ...
+});
+
+test('returns correct data', () => {
+  mockedFetch = getMockedFetch();
+  // ...
+});`;
 
 transformJestTestToVitest([{ path, content }]);
