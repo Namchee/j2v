@@ -30,6 +30,9 @@ cli
   })
   .option("-d, --debug", "Show debugging output", {
     default: false,
+  })
+  .option("-a, --automock", "Enable auto-mocking of __mocks__", {
+    default: false,
   });
 
 const args = cli.parse();
@@ -55,6 +58,7 @@ try {
   });
 
   const vitestConfig = transformJestConfigToVitest(config, args.options.globals);
+
   let setupFile: CleanupFile | undefined;
   let isTS = true;
 
