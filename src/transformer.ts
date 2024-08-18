@@ -162,8 +162,6 @@ function transformJestUtils(source: SourceFile): boolean {
   let hasUtils = false;
   const expressions = source.getDescendantsOfKind(SyntaxKind.CallExpression);
 
-  console.log('here');
-
   for (const expression of expressions) {
     const callExpression = expression.getFirstChildIfKind(
       SyntaxKind.PropertyAccessExpression,
@@ -220,6 +218,14 @@ function transformJestTypes(source: SourceFile): boolean {
   return hasJestTypes;
 };
 
+function removeJestImports(source: SourceFile) {
+  const importDec = source.getImportDeclaration(dec => dec.getModuleSpecifierValue() === '@jest/globals');
+
+  if (importDec) {
+    importDec.remove();
+  }
+}
+
 function addImportDeclaration(source: SourceFile, globals: string[]) {
   source.addImportDeclaration({
     namedImports: globals,
@@ -254,6 +260,8 @@ export function transformJestTestToVitest(
     if (imports.length) {
       addImportDeclaration(source, imports);
     }
+
+    removeJestImports(source);
   }
 }
 
