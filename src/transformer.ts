@@ -8,8 +8,11 @@ import {
 import { Logger } from "./logger";
 import type { TestFile } from "./test";
 
+// If the value is a string, it will just re-map to `vi.<name>`
+// If the value is a function, then the function will handle all the transformation
 type VitestUtil = string | ((expr: CallExpression, source: SourceFile) => void);
 
+// List of common globals used in Jest
 const JEST_GLOBALS = [
   "afterAll",
   "afterEach",
@@ -97,7 +100,9 @@ const JEST_UTILS: Record<string, VitestUtil> = {
   spyOn: "spyOn",
   mock: "mock",
   unmock: "unmock",
-  requireActual: "importActual",
+  requireActual: (expr: CallExpression) => {
+    expr.replaceWithText(`await ${expr.getText()}`);
+  },
   requireMock: "importMock",
   resetModules: "resetModules",
   isMockFunction: "isMockFunction",
@@ -137,9 +142,18 @@ const JEST_UTILS: Record<string, VitestUtil> = {
     }
   },
 };
+
+// List of commonly used (and mappable) Jest types
 const JEST_TYPES = ["Mock", "Mocked", "Replaced", "Spied"];
 
-function isPlaywrightTest(source: string) {
+/**
+ * Check whether the file is a Playwright test that should be skipped
+ *
+ * @param {string} source Source code in string
+ * @returns {boolean} `true` if the source code is a Playwright test file,
+ * `false` otherwise
+ */
+function isPlaywrightTest(source: string): boolean {
   return /'@playwright\/test'/.test(source);
 }
 
@@ -238,6 +252,8 @@ export function transformJestTestToVitest(
   useGlobals = false,
 ) {
   for (const file of testFiles) {
+    Logger.debug(`Transforming ${file.path}`);
+
     if (isPlaywrightTest(file.content)) {
       Logger.debug(`Skipped ${file.path} as it's a Playwright-based test`);
       continue;
@@ -262,6 +278,10 @@ export function transformJestTestToVitest(
     }
 
     removeJestImports(source);
+
+    file.content = source.getFullText();
+
+    Logger.debug(`Test file ${file.path} transformed successfully`);
   }
 }
 
