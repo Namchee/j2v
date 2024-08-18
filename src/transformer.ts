@@ -1,55 +1,56 @@
-import { type CallExpression, Project, type SourceFile, SyntaxKind, } from "ts-morph";
+import {
+  type CallExpression,
+  Project,
+  type SourceFile,
+  SyntaxKind,
+} from "ts-morph";
 
 import { Logger } from "./logger";
 import type { TestFile } from "./test";
 
-type VitestUtil = {
-  name: string;
-  fn?: (source: SourceFile, expr: CallExpression) => void;
-}
+type VitestUtil = string | ((expr: CallExpression, source: SourceFile) => void);
 
-const JEST_GLOBALS = ['afterAll', 'afterEach', 'beforeAll', 'beforeEach', 'describe', 'test', 'it', 'expect'];
+const JEST_GLOBALS = [
+  "afterAll",
+  "afterEach",
+  "beforeAll",
+  "beforeEach",
+  "describe",
+  "test",
+  "it",
+  "expect",
+];
 const JEST_UTILS: Record<string, VitestUtil> = {
-  useFakeTimers: {
-    name: 'useFakeTimers',
-    fn: (source: SourceFile, expr: CallExpression) => {
-      expr.setExpression('vi.useFakeTimers');
+  useFakeTimers: (expr: CallExpression) => {
+    expr.setExpression("vi.useFakeTimers");
 
-      const args = expr.getArguments()[0];
-      if (!args) {
-        return;
-      }
+    const args = expr.getArguments()[0];
+    if (!args) {
+      return;
     }
   },
-  useRealTimers: {
-    name: 'useRealTimers',
+  useRealTimers: "useRealTimers",
+  clearAllTimers: "clearAllTimers",
+  advanceTimersByTime: "advanceTimersByTime",
+  advanceTimersByTimeAsync: "advanceTimersByTimeAsync",
+  resetAllMocks: "resetAllMocks",
+  clearAllMocks: "clearAllMocks",
+  restoreAllMocks: "restoreAllMocks",
+  fn: "fn",
+  spyOn: "spyOn",
+  mock: "mock",
+  unmock: "unmock",
+  requireActual: "importActual",
+  requireMock: "importMock",
+  resetModules: "resetModules",
+  isMockFunction: "isMockFunction",
+  setTimeout: (expr: CallExpression) => {
+    const args = expr.getArguments();
+
+    expr.setExpression(`vi.setConfig({ testTimeout: ${args[0]?.getText()} }})`);
   },
-  resetAllMocks: {
-    name: 'resetAllMocks',
-  },
-  clearAllMocks: {
-    name: 'clearAllMocks',
-  },
-  restoreAllMocks: {
-    name: 'restoreAllMocks',
-  },
-  fn: {
-    name: 'fn',
-  },
-  spyOn: {
-    name: 'spyOn',
-  },
-  mock: {
-    name: 'mock',
-  },
-  requireActual: {
-    name: 'importActual',
-  },
-  requireMock: {
-    name: 'importMock',
-  },
-  mocked: (source: SourceFile, expr: CallExpression) => {
-    expr.setExpression('vi.mocked');
+  mocked: (expr: CallExpression, source: SourceFile) => {
+    expr.setExpression("vi.mocked");
 
     const args = expr.getArguments();
     if (args.length !== 2) {
@@ -57,7 +58,9 @@ const JEST_UTILS: Record<string, VitestUtil> = {
     }
 
     if (args[1]?.getKind() !== SyntaxKind.ObjectLiteralExpression) {
-      Logger.warning(`j2v cannot transform \`jest.mocked\` on line ${expr.getStartLineNumber(true)} in \`${source.getBaseName()}\` correctly. You might want to transform it manually`);
+      Logger.warning(
+        `j2v cannot transform \`jest.mocked\` on line ${expr.getStartLineNumber(true)} in \`${source.getBaseName()}\` correctly. You might want to transform it manually`,
+      );
     }
 
     const props = args[1]?.getChildrenOfKind(SyntaxKind.PropertyAssignment);
@@ -68,15 +71,15 @@ const JEST_UTILS: Record<string, VitestUtil> = {
     for (const prop of props) {
       const identifier = prop.getFirstChildByKind(SyntaxKind.Identifier);
 
-      if (identifier?.getText() === 'shallow') {
+      if (identifier?.getText() === "shallow") {
         const value = args[1]?.getChildrenOfKind(SyntaxKind.FalseKeyword);
 
-        expr.insertArgument(1, value?.length ? 'true' : 'false');
+        expr.insertArgument(1, value?.length ? "true" : "false");
         expr.removeArgument(2);
       }
     }
-  }
-}
+  },
+};
 
 function isPlaywrightTest(source: string) {
   return /'@playwright\/test'/.test(source);
@@ -102,7 +105,9 @@ function transformJestUtils(source: SourceFile): boolean {
   const expressions = source.getDescendantsOfKind(SyntaxKind.CallExpression);
 
   for (const expression of expressions) {
-    const callExpression = expression.getFirstChildIfKind(SyntaxKind.PropertyAccessExpression);
+    const callExpression = expression.getFirstChildIfKind(
+      SyntaxKind.PropertyAccessExpression,
+    );
 
     if (!callExpression) {
       continue;
@@ -112,26 +117,24 @@ function transformJestUtils(source: SourceFile): boolean {
     const sourceObject = callChildren[0];
     const method = callChildren[2];
 
-    if (sourceObject?.getText() !== 'jest' || !method) {
+    if (sourceObject?.getText() !== "jest" || !method) {
       continue;
     }
 
     if (JEST_UTILS[method.getText()]) {
       const { name, fn } = JEST_UTILS[method.getText()];
 
-    if (fn) {
-      fn(source, expression);
-    } else {
-      expression.setExpression(`vi.${name}`);
-    }
+      if (fn) {
+        fn(source, expression);
+      } else {
+        expression.setExpression(`vi.${name}`);
+      }
     } else {
       const parent = expression.getParent();
       if (parent) {
-        source.removeText()
+        source.removeText();
       }
     }
-
-
 
     hasUtils = true;
   }
@@ -142,11 +145,14 @@ function transformJestUtils(source: SourceFile): boolean {
 function addImportDeclaration(source: SourceFile, globals: string[]) {
   source.addImportDeclaration({
     namedImports: globals,
-    moduleSpecifier: 'vitest',
+    moduleSpecifier: "vitest",
   });
 }
 
-export function transformJestTestToVitest(testFiles: TestFile[], useGlobals = false) {
+export function transformJestTestToVitest(
+  testFiles: TestFile[],
+  useGlobals = false,
+) {
   for (const file of testFiles) {
     if (isPlaywrightTest(file.content)) {
       continue;
@@ -159,7 +165,7 @@ export function transformJestTestToVitest(testFiles: TestFile[], useGlobals = fa
     const hasUtils = transformJestUtils(source);
 
     if (hasUtils) {
-      globals.push('vi');
+      globals.push("vi");
     }
 
     if (!useGlobals) {
@@ -168,7 +174,7 @@ export function transformJestTestToVitest(testFiles: TestFile[], useGlobals = fa
   }
 }
 
-const path = 'some/random/path.ts';
+const path = "some/random/path.ts";
 const content = `describe('arithmetic', () => {
   beforeAll(() => {
     console.log("I'm executed before all!");
