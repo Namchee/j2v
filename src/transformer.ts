@@ -21,13 +21,70 @@ const JEST_GLOBALS = [
   "expect",
 ];
 const JEST_UTILS: Record<string, VitestUtil> = {
-  useFakeTimers: (expr: CallExpression) => {
+  useFakeTimers: (expr: CallExpression, source: SourceFile) => {
     expr.setExpression("vi.useFakeTimers");
 
     const args = expr.getArguments()[0];
     if (!args) {
       return;
     }
+
+    if (args.getKind() !== SyntaxKind.ObjectLiteralExpression) {
+      Logger.warning(
+        `j2v cannot transform \`jest.useFakeTimers\` on line ${expr.getStartLineNumber(true)} in \`${source.getBaseName()}\` correctly. You might want to transform it to Vitest equivalent manually`,
+      );
+    }
+
+    const props = args.getChildrenOfKind(SyntaxKind.PropertyAssignment);
+    const newTimerOptions: Record<string, unknown> = {};
+
+    for (const prop of props) {
+      const value = prop.getChildAtIndex(1).getText();
+
+      switch (prop.getText()) {
+        case 'advanceTimers': {
+          newTimerOptions.shouldAdvanceTime = 'true';
+
+          if (!Number.isNaN(value)) {
+            newTimerOptions.advanceTimeDelta = value;
+          }
+
+          break;
+        }
+        case 'now': {
+          newTimerOptions.now = value;
+          break;
+        }
+        case 'doNotFake': {
+          // https://jestjs.io/docs/jest-object#fake-timers
+          const mockedByJest = [
+            "Date",
+            "hrtime",
+            "nextTick",
+            "performance",
+            "queueMicrotask",
+            "requestAnimationFrame",
+            "cancelAnimationFrame",
+            "requestIdleCallback",
+            "cancelIdleCallback",
+            "setImmediate",
+            "clearImmediate",
+            "setInterval",
+            "clearInterval",
+            "setTimeout",
+            "clearTimeout",
+          ];
+
+          newTimerOptions.toFake = mockedByJest.filter(
+            (method) => !JSON.parse(value).includes(method),
+          );
+          break;
+        }
+      }
+    }
+
+    expr.insertArgument(0, JSON.stringify(newTimerOptions));
+    expr.removeArgument(1);
   },
   useRealTimers: "useRealTimers",
   clearAllTimers: "clearAllTimers",
@@ -59,7 +116,7 @@ const JEST_UTILS: Record<string, VitestUtil> = {
 
     if (args[1]?.getKind() !== SyntaxKind.ObjectLiteralExpression) {
       Logger.warning(
-        `j2v cannot transform \`jest.mocked\` on line ${expr.getStartLineNumber(true)} in \`${source.getBaseName()}\` correctly. You might want to transform it manually`,
+        `j2v cannot transform \`jest.mocked\` on line ${expr.getStartLineNumber(true)} in \`${source.getBaseName()}\` correctly. You might want to transform it to Vitest equivalent manually`,
       );
     }
 
@@ -122,12 +179,12 @@ function transformJestUtils(source: SourceFile): boolean {
     }
 
     if (JEST_UTILS[method.getText()]) {
-      const { name, fn } = JEST_UTILS[method.getText()];
+      const mapping = JEST_UTILS[method.getText()];
 
-      if (fn) {
-        fn(source, expression);
+      if (typeof mapping === 'function') {
+        mapping(expression, source);
       } else {
-        expression.setExpression(`vi.${name}`);
+        expression.setExpression(`vi.${mapping}`);
       }
     } else {
       const parent = expression.getParent();
