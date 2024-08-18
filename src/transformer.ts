@@ -3,10 +3,51 @@ import { type CallExpression, Project, type SourceFile, SyntaxKind, } from "ts-m
 import { Logger } from "./logger";
 import type { TestFile } from "./test";
 
-type TransformerFn = (source: SourceFile, expr: CallExpression) => void;
+type VitestUtil = {
+  name: string;
+  fn?: (source: SourceFile, expr: CallExpression) => void;
+}
 
 const JEST_GLOBALS = ['afterAll', 'afterEach', 'beforeAll', 'beforeEach', 'describe', 'test', 'it', 'expect'];
-const TRANSFORMER: Record<string, TransformerFn> = {
+const JEST_UTILS: Record<string, VitestUtil> = {
+  useFakeTimers: {
+    name: 'useFakeTimers',
+    fn: (source: SourceFile, expr: CallExpression) => {
+      expr.setExpression('vi.useFakeTimers');
+
+      const args = expr.getArguments()[0];
+      if (!args) {
+        return;
+      }
+    }
+  },
+  useRealTimers: {
+    name: 'useRealTimers',
+  },
+  resetAllMocks: {
+    name: 'resetAllMocks',
+  },
+  clearAllMocks: {
+    name: 'clearAllMocks',
+  },
+  restoreAllMocks: {
+    name: 'restoreAllMocks',
+  },
+  fn: {
+    name: 'fn',
+  },
+  spyOn: {
+    name: 'spyOn',
+  },
+  mock: {
+    name: 'mock',
+  },
+  requireActual: {
+    name: 'importActual',
+  },
+  requireMock: {
+    name: 'importMock',
+  },
   mocked: (source: SourceFile, expr: CallExpression) => {
     expr.setExpression('vi.mocked');
 
@@ -75,13 +116,22 @@ function transformJestUtils(source: SourceFile): boolean {
       continue;
     }
 
-    const fn = TRANSFORMER[method.getText()];
+    if (JEST_UTILS[method.getText()]) {
+      const { name, fn } = JEST_UTILS[method.getText()];
 
     if (fn) {
       fn(source, expression);
     } else {
-      expression.setExpression(`vi.${method.getText()}`);
+      expression.setExpression(`vi.${name}`);
     }
+    } else {
+      const parent = expression.getParent();
+      if (parent) {
+        source.removeText()
+      }
+    }
+
+
 
     hasUtils = true;
   }
