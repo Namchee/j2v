@@ -102,8 +102,20 @@ const JEST_UTILS: Record<string, VitestUtil> = {
   unmock: "unmock",
   requireActual: (expr: CallExpression) => {
     expr.replaceWithText(`await ${expr.getText()}`);
+
+    const parent = expr.getFirstAncestorByKind(SyntaxKind.ArrowFunction) || expr.getFirstAncestorByKind(SyntaxKind.FunctionExpression);
+    if (parent) {
+      parent.replaceWithText(`async ${parent.getText()}`);
+    }
   },
-  requireMock: "importMock",
+  requireMock: (expr: CallExpression) => {
+    expr.replaceWithText(`await ${expr.getText()}`);
+
+    const parent = expr.getFirstAncestorByKind(SyntaxKind.ArrowFunction) || expr.getFirstAncestorByKind(SyntaxKind.FunctionExpression);
+    if (parent) {
+      parent.replaceWithText(`async ${parent.getText()}`);
+    }
+  },
   resetModules: "resetModules",
   isMockFunction: "isMockFunction",
   setTimeout: (expr: CallExpression) => {
