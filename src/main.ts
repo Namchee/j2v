@@ -31,7 +31,7 @@ cli
   .option("-d, --debug", "Show debugging output", {
     default: false,
   })
-  .option("-a, --automock", "Enable auto-mocking of __mocks__", {
+  .option("--dry-run", "Perform a dry-run of the CLI", {
     default: false,
   });
 
