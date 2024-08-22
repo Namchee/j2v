@@ -22,7 +22,6 @@ import { transformJestTestToVitest } from "./transformer";
 
 import type { CleanupFile } from "./setup";
 
-
 const cli = cac();
 cli
   .option("--globals", "Enable Vitest global API to your test files", {

@@ -101,20 +101,22 @@ const JEST_UTILS: Record<string, VitestUtil> = {
   mock: "mock",
   unmock: "unmock",
   requireActual: (expr: CallExpression) => {
-    expr.replaceWithText(`await ${expr.getText()}`);
-
     const parent = expr.getFirstAncestorByKind(SyntaxKind.ArrowFunction) || expr.getFirstAncestorByKind(SyntaxKind.FunctionExpression);
     if (parent) {
+      console.log(parent?.getText());
       parent.replaceWithText(`async ${parent.getText()}`);
     }
+
+    // expr.replaceWithText(`await ${expr.getText()}`);
   },
   requireMock: (expr: CallExpression) => {
-    expr.replaceWithText(`await ${expr.getText()}`);
 
     const parent = expr.getFirstAncestorByKind(SyntaxKind.ArrowFunction) || expr.getFirstAncestorByKind(SyntaxKind.FunctionExpression);
     if (parent) {
       parent.replaceWithText(`async ${parent.getText()}`);
     }
+
+    expr.replaceWithText(`await ${expr.getText()}`);
   },
   resetModules: "resetModules",
   isMockFunction: "isMockFunction",
@@ -216,10 +218,7 @@ function transformJestUtils(source: SourceFile): boolean {
 
       hasUtils = true;
     } else {
-      const parent = expression.getParent();
-      if (parent) {
-        source.removeText();
-      }
+
     }
   }
 
@@ -264,7 +263,7 @@ export function transformJestTestToVitest(
   useGlobals = false,
 ) {
   for (const file of testFiles) {
-    Logger.debug(`Transforming ${file.path}`);
+    // Logger.debug(`Transforming ${file.path}`);
 
     if (isPlaywrightTest(file.content)) {
       Logger.debug(`Skipped ${file.path} as it's a Playwright-based test`);
@@ -293,30 +292,22 @@ export function transformJestTestToVitest(
 
     file.content = source.getFullText();
 
-    Logger.debug(`Test file ${file.path} transformed successfully`);
+    // Logger.debug(`Test file ${file.path} transformed successfully`);
   }
 }
 
 const path = "some/random/path.ts";
-const content = `import {expect, jest, test} from '@jest/globals';
-import type {fetch} from 'node-fetch';
+const content = `jest.mock('../myModule', () => {
+  // Require the original module to not be mocked...
+  const originalModule =
+    jest.requireActual<typeof import('../myModule')>('../myModule');
 
-jest.mock('node-fetch');
-
-let mockedFetch: jest.Mocked<typeof fetch>;
-
-afterEach(() => {
-  mockedFetch.mockClear();
+  return {
+    __esModule: true, // Use it when dealing with esModules
+    ...originalModule,
+    getRandom: jest.fn(() => 10),
+  };
 });
-
-test('makes correct call', () => {
-  mockedFetch = getMockedFetch();
-  // ...
-});
-
-test('returns correct data', () => {
-  mockedFetch = getMockedFetch();
-  // ...
-});`;
+`;
 
 transformJestTestToVitest([{ path, content }]);
