@@ -103,20 +103,14 @@ const JEST_UTILS: Record<string, VitestUtil> = {
   requireActual: (expr: CallExpression) => {
     const parent = expr.getFirstAncestorByKind(SyntaxKind.ArrowFunction) || expr.getFirstAncestorByKind(SyntaxKind.FunctionExpression);
     if (parent) {
-      console.log(parent?.getText());
       parent.replaceWithText(`async ${parent.getText()}`);
     }
-
-    // expr.replaceWithText(`await ${expr.getText()}`);
   },
   requireMock: (expr: CallExpression) => {
-
     const parent = expr.getFirstAncestorByKind(SyntaxKind.ArrowFunction) || expr.getFirstAncestorByKind(SyntaxKind.FunctionExpression);
     if (parent) {
       parent.replaceWithText(`async ${parent.getText()}`);
     }
-
-    expr.replaceWithText(`await ${expr.getText()}`);
   },
   resetModules: "resetModules",
   isMockFunction: "isMockFunction",
