@@ -25,8 +25,9 @@ const VITEST_CONFIG_MAP: Record<keyof UserConfig["test"], string> = {
     exclude: "coveragePathIgnorePatterns",
     reportsDirectory: "coverageDirectory",
     thresholds: "coverageThreshold",
+    provider: "coverageProvider",
+    reporter: "coverageReporters",
   },
-  coverageReporters: "coverageReporters",
   fakeTimers: "fakeTimers",
   maxConcurrency: "maxConcurrency",
   maxWorkers: "maxWorkers",
@@ -51,6 +52,7 @@ const CONFIG_MAPPER: Partial<
   Record<keyof JestConfig, (value: any) => unknown>
 > = {
   coverageThreshold: convertJestCoverageThresholdToVitest,
+  coverageProvider: convertJestCoverageProviderToVitest,
   fakeTimers: convertJestTimerConfigToVitest,
   bail: convertJestBailConfigToVitest,
 };
@@ -78,6 +80,10 @@ function removeUndefinedKeys(obj: AnyObject) {
   }
 
   return newObj;
+}
+
+function convertJestCoverageProviderToVitest() {
+  return "v8";
 }
 
 function convertJestCoverageThresholdToVitest(

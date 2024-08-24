@@ -24,8 +24,34 @@ Jest to Vitest CLI migration tool
   - [x] Create new script
   - [x] Mod the existing one
 - [x] Dependency Migration
-- [ ] CLI
+- [x] CLI
 - [ ] Test file converter
+
+## Support
+
+### Configuration and CLI
+
+| Key | Supported? | Transformed To |
+| --- | ---------- | -------------- |
+| `automock` | ❌ | - |
+| [`bail`](https://jestjs.io/docs/configuration#bail-number--boolean) | ✅ | [`bail`](https://vitest.dev/config/#bail)[^1] |
+| [`cacheDirectory`](https://jestjs.io/docs/configuration#cachedirectory-string) | ✅ | [`server.deps.cacheDir`](https://vitest.dev/config/#server-deps-cachedir) |
+| [`clearMocks`](https://jestjs.io/docs/configuration#clearmocks-boolean) | ✅ | [`clearMocks`](https://vitest.dev/config/#clearmocks) |
+| [`collectCoverage`](https://jestjs.io/docs/configuration#collectcoverage-boolean) | ✅ | [`coverage.enabled`](https://vitest.dev/config/#coverage-enabled) |
+| [`collectCoverageFrom`](https://jestjs.io/docs/configuration#collectcoveragefrom-array) | ✅ | [`coverage.include`](https://vitest.dev/config/#coverage-include) |
+| [`coverageDirectory`](https://jestjs.io/docs/configuration#coveragedirectory-string) | ✅ | [`coverage.reportsDirectory`](https://vitest.dev/config/#coverage-reportsdirectory) |
+| [`coveragePathIgnorePatterns`](https://jestjs.io/docs/configuration#coveragepathignorepatterns-arraystring) | ✅ | [`coverage.exclude`](https://vitest.dev/config/#coverage-exclude) |
+| [`coverageProvider`](https://jestjs.io/docs/configuration#coverageprovider-string) | ✅ | [`coverage.provider`](https://vitest.dev/config/#coverage-provider)[^2] |
+| [`coverageReporters`](https://vitest.dev/config/#coverage-provider) | ✅ | [`coverageReporter`](https://vitest.dev/config/#coverage-reporter) |
+| [`coverageThreshold`](https://jestjs.io/docs/configuration#coveragethreshold-object) | ✅ | [`coverage.threshold`](https://vitest.dev/config/#coverage-thresholds)[^3] |
+| [`dependencyExtractor`](https://jestjs.io/docs/configuration#dependencyextractor-string) | ❌ | - |
+| [`displayName`](https://jestjs.io/docs/configuration#displayname-string-object) | ❌ | - |
+| [`errorOnDeprecated`](https://jestjs.io/docs/configuration#errorondeprecated-boolean) | ❌ | - |
+| [`extensionsToTreatAsEsm`](https://jestjs.io/docs/configuration#extensionstotreatasesm-arraystring) | ❌ | - |
+
+[^1]: Converted to `number`
+[^2]: Forcefully transformed to `v8`
+[^3]: `global` is extracted
 
 ## Acknowledgments
 
