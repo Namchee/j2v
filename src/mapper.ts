@@ -17,6 +17,7 @@ const VITEST_CONFIG_MAP: Record<keyof UserConfig["test"], string> = {
   server: {
     deps: {
       cacheDir: "cacheDirectory",
+      moduleDirectories: "moduleDirectories",
     },
   },
   coverage: {
@@ -36,12 +37,21 @@ const VITEST_CONFIG_MAP: Record<keyof UserConfig["test"], string> = {
       files: "randomize",
     },
   },
-  root: "rootDir",
+  pool: "workerThreads",
+  poolOptions: {
+    vmThreads: {
+      memoryLimit: "workerIdleMemoryLimit",
+    },
+  },
+  resetMocks: "mockReset",
+  dir: "rootDir",
   setupFiles: "setupFiles",
   slowTestThreshold: "slowTestThreshold",
   snapshotFormat: "snapshotFormat",
   snapshotSerializers: "snapshotSerializers",
+  teardownTimeout: "openHandlesTimeout",
   environment: "testEnvironment",
+  environmentOptions: "testEnvironmentOptions",
   include: "testMatch",
   exclude: "testPathIgnorePatterns",
   testTimeout: "testTimeout",
@@ -55,6 +65,7 @@ const CONFIG_MAPPER: Partial<
   coverageProvider: convertJestCoverageProviderToVitest,
   fakeTimers: convertJestTimerConfigToVitest,
   bail: convertJestBailConfigToVitest,
+  workerThreads: convertWorkerThreadConfigToVitest,
 };
 
 function removeUndefinedKeys(obj: AnyObject) {
@@ -82,6 +93,12 @@ function removeUndefinedKeys(obj: AnyObject) {
   return newObj;
 }
 
+function convertWorkerThreadConfigToVitest(value: boolean) {
+  return value ? "threads" : "forks";
+}
+
+// Temporarily return v8, as it's the only provider that is
+// supported by both library
 function convertJestCoverageProviderToVitest() {
   return "v8";
 }
@@ -142,7 +159,7 @@ function convertJestTimerConfigToVitest(
 }
 
 function convertJestBailConfigToVitest(bail: number | boolean): number {
-  return typeof bail === 'boolean' ? 1 : bail;
+  return typeof bail === "boolean" ? 1 : bail;
 }
 
 export function transformJestConfigToVitest(
@@ -185,5 +202,5 @@ export function transformJestConfigToVitest(
 
   const cleanedConfig = removeUndefinedKeys(vitestConfig);
 
-  return cleanedConfig ? cleanedConfig as UserConfig["test"] : {};
+  return cleanedConfig ? (cleanedConfig as UserConfig["test"]) : {};
 }
