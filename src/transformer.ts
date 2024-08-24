@@ -102,14 +102,23 @@ const JEST_UTILS: Record<string, VitestUtil> = {
   unmock: "unmock",
   requireActual: (expr: CallExpression) => {
     const parent = expr.getFirstAncestorByKind(SyntaxKind.ArrowFunction) || expr.getFirstAncestorByKind(SyntaxKind.FunctionExpression);
-    if (parent) {
-      parent.replaceWithText(`async ${parent.getText()}`);
+
+    expr.setExpression('vi.importActual');
+    expr.replaceWithText(`await ${expr.getText()}`);
+
+    if (parent && !parent.hasModifier(SyntaxKind.AsyncKeyword)) {
+      parent.setIsAsync(true);
     }
+
   },
   requireMock: (expr: CallExpression) => {
     const parent = expr.getFirstAncestorByKind(SyntaxKind.ArrowFunction) || expr.getFirstAncestorByKind(SyntaxKind.FunctionExpression);
-    if (parent) {
-      parent.replaceWithText(`async ${parent.getText()}`);
+
+    expr.setExpression('vi.importMock');
+    expr.replaceWithText(`await ${expr.getText()}`);
+
+    if (parent && !parent.hasModifier(SyntaxKind.AsyncKeyword)) {
+      parent.setIsAsync(true);
     }
   },
   resetModules: "resetModules",
@@ -212,10 +221,9 @@ function transformJestUtils(source: SourceFile): boolean {
 
       hasUtils = true;
     } else {
-      const parentStatement = expression.getParentIfKind(SyntaxKind.ExpressionStatement);
-      if (parentStatement) {
-        parentStatement.remove();
-      }
+      Logger.warning(
+        `j2v cannot transform \`${callExpression.getText()}\` on line ${expression.getStartLineNumber(true)} in \`${source.getBaseName()}\` correctly. You might want to transform it to Vitest equivalent manually`,
+      );
     }
   }
 
@@ -294,17 +302,11 @@ export function transformJestTestToVitest(
 }
 
 const path = "some/random/path.ts";
-const content = `jest.mock('../myModule', () => {
-  // Require the original module to not be mocked...
-  const originalModule =
-    jest.requireActual<typeof import('../myModule')>('../myModule');
-
-  return {
-    __esModule: true, // Use it when dealing with esModules
-    ...originalModule,
-    getRandom: jest.fn(() => 10),
-  };
+const content = `let myModule;
+jest.isolateModules(() => {
+  myModule = require('myModule');
 });
-`;
+
+const otherCopyOfMyModule = require('myModule');`;
 
 transformJestTestToVitest([{ path, content }]);
