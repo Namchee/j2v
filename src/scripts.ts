@@ -28,6 +28,9 @@ const JEST_CLI_MAP: Record<string, VitestCLIOption> = {
   collectCoverage: {
     flag: 'coverage.enabled',
   },
+  collectCoverageFrom: {
+    flag: 'coverage.include',
+  },
   coverageDirectory: {
     flag: 'coverage.reportsDirectory',
   },
