@@ -230,8 +230,8 @@ function transformJestUtils(source: SourceFile): boolean {
   return hasUtils;
 }
 
-function transformJestTypes(source: SourceFile): boolean {
-  let hasJestTypes = false;
+function transformJestTypes(source: SourceFile): string[] {
+  const neededTypes = [];
   const typeRefs = source.getDescendantsOfKind(SyntaxKind.TypeReference);
 
   for (const typeRef of typeRefs) {
@@ -240,12 +240,14 @@ function transformJestTypes(source: SourceFile): boolean {
     const typeProp = typeName.getLastChild();
 
     if (namespace?.getText() === 'jest' && typeProp && JEST_TYPES.includes(typeProp.getText())) {
-      typeName.replaceWithText(`vi.${typeProp.getText()}`);
-      hasJestTypes = true;
+      const typeName = typeProp.getText();
+
+      typeProp.replaceWithText(typeName);
+      neededTypes.push(typeName);
     }
   }
 
-  return hasJestTypes;
+  return neededTypes;
 };
 
 function removeJestImports(source: SourceFile) {
@@ -254,13 +256,6 @@ function removeJestImports(source: SourceFile) {
   if (importDec) {
     importDec.remove();
   }
-}
-
-function addImportDeclaration(source: SourceFile, globals: string[]) {
-  source.addImportDeclaration({
-    namedImports: globals,
-    moduleSpecifier: "vitest",
-  });
 }
 
 export function transformJestTestToVitest(
@@ -279,9 +274,9 @@ export function transformJestTestToVitest(
     const source = project.createSourceFile(file.path, file.content);
 
     const hasUtils = transformJestUtils(source);
-    const hasTypes = transformJestTypes(source);
+    const neededTypes = transformJestTypes(source);
 
-    const imports = hasUtils || hasTypes
+    const imports = hasUtils || neededTypes
       ? ["vi"]
       : [];
 
@@ -290,7 +285,17 @@ export function transformJestTestToVitest(
     }
 
     if (imports.length) {
-      addImportDeclaration(source, imports);
+      source.addImportDeclaration({
+        namedImports: imports,
+        moduleSpecifier: "vitest",
+      });
+    }
+
+    if (neededTypes.length) {
+      source.addImportDeclaration({
+        namedImports: neededTypes.map(importName => ({ name: importName, isTypeOnly: true })),
+        moduleSpecifier: 'vitest',
+      })
     }
 
     removeJestImports(source);

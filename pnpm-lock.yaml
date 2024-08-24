@@ -36,6 +36,9 @@ importers:
       '@biomejs/biome':
         specifier: ^1.8.3
         version: 1.8.3
+      '@jest/globals':
+        specifier: ^29.7.0
+        version: 29.7.0
       '@namchee/biome-config':
         specifier: ^1.0.1
         version: 1.0.1(@biomejs/biome@1.8.3)

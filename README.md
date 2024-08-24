@@ -104,6 +104,20 @@ Jest to Vitest CLI migration tool
 [^7]: You need to convert each of them manually to [ESM format](https://vitest.dev/guide/snapshot#custom-serializer)
 [^8]: `threads` if `true`, `forks` otherwise.
 
+### Jest API
+
+| API | Supported? | Transformed To |
+| [`disableAutoMock`](https://jestjs.io/docs/jest-object#jestdisableautomock) | ❌ | - |
+| [`enableAutoMock`](https://jestjs.io/docs/jest-object#jestenableautomock) | ❌ | - |
+| [`createMockFromModule`](https://jestjs.io/docs/jest-object#jestcreatemockfrommodulemodulename) | ❌ | - |
+| [`mock`](https://jestjs.io/docs/jest-object#jestmockmodulename-factory-options) | ✅ | [`mock`](https://vitest.dev/api/vi.html#vi-mock) |
+| [``]
+
+### Jest Types
+
+| Types | Supported? | Transformed To |
+| [`Mocked`](https://jestjs.io/docs/jest-object#jestmockedsource) | ✅ | [`Mocked`]()
+
 ## Acknowledgments
 
 1. This project would not exist without the existence of this [Jest migration to Vitest gist](https://gist.github.com/wojtekmaj/6defa1f358daae28bd52b7b6dbeb7ab6)
