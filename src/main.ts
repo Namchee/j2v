@@ -70,7 +70,14 @@ try {
 
   // TODO: write transformer script here...
   const testFiles = await getTestFiles(vitestConfig);
-  const transformedTests = await transformJestTestToVitest(testFiles, args.options.globals);
+  const transformedTests = transformJestTestToVitest(testFiles, args.options.globals);
+
+  for (const transformedTest of transformedTests) {
+    Logger.debug(`Successfully transformed ${transformedTest.path}`);
+    writeFileSync(transformedTest.path, transformedTest.content);
+  }
+
+  Logger.debug(`Succesfully transformed ${testFiles.length} test file(s)`);
 
   spinner.update({
     text: color.green("Transforming package's scripts...\n"),

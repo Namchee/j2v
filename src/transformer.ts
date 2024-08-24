@@ -266,9 +266,9 @@ function addImportDeclaration(source: SourceFile, globals: string[]) {
 export function transformJestTestToVitest(
   testFiles: TestFile[],
   useGlobals = false,
-) {
+): TestFile[] {
   for (const file of testFiles) {
-    // Logger.debug(`Transforming ${file.path}`);
+    Logger.debug(`Transforming ${file.path}`);
 
     if (isPlaywrightTest(file.content)) {
       Logger.debug(`Skipped ${file.path} as it's a Playwright-based test`);
@@ -297,16 +297,9 @@ export function transformJestTestToVitest(
 
     file.content = source.getFullText();
 
-    // Logger.debug(`Test file ${file.path} transformed successfully`);
+    Logger.debug(`Test file ${file.path} transformed successfully`);
   }
+
+  return testFiles;
 }
 
-const path = "some/random/path.ts";
-const content = `let myModule;
-jest.isolateModules(() => {
-  myModule = require('myModule');
-});
-
-const otherCopyOfMyModule = require('myModule');`;
-
-transformJestTestToVitest([{ path, content }]);
