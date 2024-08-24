@@ -94,13 +94,17 @@ function removeUndefinedKeys(obj: AnyObject) {
 }
 
 function convertWorkerThreadConfigToVitest(value: boolean) {
+  if (typeof value !== "boolean") {
+    return undefined;
+  }
+
   return value ? "threads" : "forks";
 }
 
 // Temporarily return v8, as it's the only provider that is
 // supported by both library
-function convertJestCoverageProviderToVitest() {
-  return "v8";
+function convertJestCoverageProviderToVitest(value: string) {
+  return value !== undefined ? "v8" : undefined;
 }
 
 function convertJestCoverageThresholdToVitest(

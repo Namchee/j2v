@@ -26,7 +26,7 @@ describe("transformJestConfigToVitest", () => {
         enabled: true,
       },
       maxWorkers: 5,
-      root: ".",
+      dir: ".",
       server: {
         deps: {
           cacheDir: "./.test_cache",
@@ -116,6 +116,32 @@ describe("transformJestConfigToVitest", () => {
           "clearInterval",
         ]),
       },
+    });
+  });
+
+  it("should convert coverageProvider to v8", () => {
+    const jestConfig: JestConfig = {
+      coverageProvider: "babel",
+    };
+
+    const vitestConfig = transformJestConfigToVitest(jestConfig);
+
+    expect(vitestConfig).toStrictEqual({
+      coverage: {
+        provider: "v8",
+      },
+    });
+  });
+
+  it("should convert workerThreads options correctly", () => {
+    const jestConfig: JestConfig = {
+      workerThreads: true,
+    };
+
+    const vitestConfig = transformJestConfigToVitest(jestConfig);
+
+    expect(vitestConfig).toStrictEqual({
+      pool: 'threads',
     });
   });
 });
