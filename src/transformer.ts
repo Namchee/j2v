@@ -212,7 +212,10 @@ function transformJestUtils(source: SourceFile): boolean {
 
       hasUtils = true;
     } else {
-
+      const parentStatement = expression.getParentIfKind(SyntaxKind.ExpressionStatement);
+      if (parentStatement) {
+        parentStatement.remove();
+      }
     }
   }
 
