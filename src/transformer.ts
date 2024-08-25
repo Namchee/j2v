@@ -280,15 +280,17 @@ function transformJestTypes(source: SourceFile): string[] {
     const namespace = typeName.getFirstChild();
     const typeProp = typeName.getLastChild();
 
-    if (
-      namespace?.getText() === "jest" &&
-      typeProp &&
-      JEST_TYPES.includes(typeProp.getText())
-    ) {
-      const typeName = typeProp.getText();
+    if (namespace?.getText() === "jest" && typeProp) {
+      if (
+        JEST_TYPES.includes(typeProp.getText())
+      ) {
+        const typeName = typeProp.getText();
 
-      typeProp.replaceWithText(typeName);
-      neededTypes.push(typeName);
+        typeProp.replaceWithText(typeName);
+        neededTypes.push(typeName);
+      } else {
+        typeRef.getFirstAncestorByKind(SyntaxKind.VariableDeclaration)?.removeType();
+      }
     }
   }
 
