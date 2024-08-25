@@ -95,27 +95,57 @@ Jest to Vitest CLI migration tool
 | [`workerIdleMemoryLimit`](https://jestjs.io/docs/configuration#workeridlememorylimit-numberstring) | ✅ | [`poolOptions.vmThreads.memoryLimit`](https://vitest.dev/config/#pooloptions-vmthreads-memorylimit) |
 | [`workerThreads`](https://jestjs.io/docs/configuration#workerthreads) | ✅ | [`pool`](https://vitest.dev/config/#pool)[^8] |
 
-[^1]: Converted to `number`
-[^2]: Forcefully transformed to `v8`
-[^3]: `global` is extracted
-[^4]: [See transfomer here](./src/mapper.ts)
-[^5]: Forcefully set to `false` by default, but can be enabled by passing `global` flag in the CLI
-[^6]: Only supported if provided via CLI
-[^7]: You need to convert each of them manually to [ESM format](https://vitest.dev/guide/snapshot#custom-serializer)
-[^8]: `threads` if `true`, `forks` otherwise.
-
 ### Jest API
 
 | API | Supported? | Transformed To |
+| --- | :--------: | -------------- |
 | [`disableAutoMock`](https://jestjs.io/docs/jest-object#jestdisableautomock) | ❌ | - |
 | [`enableAutoMock`](https://jestjs.io/docs/jest-object#jestenableautomock) | ❌ | - |
 | [`createMockFromModule`](https://jestjs.io/docs/jest-object#jestcreatemockfrommodulemodulename) | ❌ | - |
 | [`mock`](https://jestjs.io/docs/jest-object#jestmockmodulename-factory-options) | ✅ | [`mock`](https://vitest.dev/api/vi.html#vi-mock) |
-| [``]
+| [`mocked`](https://jestjs.io/docs/jest-object#jestmockedsource-options) | ✅ | [`mocked`](https://vitest.dev/api/vi.html#vi-mocked) |
+| [`unmock`](https://jestjs.io/docs/jest-object#jestunmockmodulename) | ✅ | [`unmock`](https://vitest.dev/api/vi.html#vi-unmock) |
+| [`deepUnmock`](https://jestjs.io/docs/jest-object#jestdeepunmockmodulename) | ❌ | - |
+| [`doMock`](https://jestjs.io/docs/jest-object#jestdomockmodulename-factory-options) | ✅ | [`doMock`](https://vitest.dev/api/vi.html#vi-domock) |
+| [`dontMock`](https://jestjs.io/docs/jest-object#jestdontmockmodulename) | ❌ | - |
+| [`setMock`](https://jestjs.io/docs/jest-object#jestsetmockmodulename-moduleexports) | ❌ | - |
+| [`requireActual`](https://jestjs.io/docs/jest-object#jestrequireactualmodulename) | ✅ | [`importActual`](https://vitest.dev/api/vi.html#vi-importactual)[^9] |
+| [`requireMock`](https://jestjs.io/docs/jest-object#jestrequiremockmodulename) | ✅ | [`importMock`](https://vitest.dev/api/vi.html#vi-importmock)[^9] |
+| [`resetModules`](https://jestjs.io/docs/jest-object#jestresetmodules) | ✅ | [`resetModules`](https://vitest.dev/api/vi.html#vi-resetmodules) |
+| [`isolateModules`](https://jestjs.io/docs/jest-object#jestisolatemodulesfn) | ❌ | - |
+| [`isolateModulesAsync`](https://jestjs.io/docs/jest-object#jestisolatemodulesasyncfn) | ❌ | - |
+| [`fn`](https://jestjs.io/docs/jest-object#jestfnimplementation) | ✅ | [`fn`](https://vitest.dev/api/vi.html#vi-fn) |
+| [`isMockFunction`](https://jestjs.io/docs/jest-object#jestismockfunctionfn) | ✅ | [`isMockFunction`](https://vitest.dev/api/vi.html#vi-ismockfunction) |
+| [`replaceProperty`](https://jestjs.io/docs/jest-object#jestreplacepropertyobject-propertykey-value) | ❌ | - |
+| [`spyOn`](https://jestjs.io/docs/jest-object#jestspyonobject-methodname) | ✅ | [`spyOn`](https://vitest.dev/api/vi.html#vi-spyon) |
+| [`clearAllMocks`](https://jestjs.io/docs/jest-object#jestclearallmocks) | ✅ | [`clearAllMocks`](https://vitest.dev/api/vi.html#vi-clearallmocks) |
+| [`resetAllMocks`](https://jestjs.io/docs/jest-object#jestresetallmocks) | ✅ | [`resetAllMocks`](https://vitest.dev/api/vi.html#vi-resetallmocks) |
+| [`restoreAllMocks`](https://jestjs.io/docs/jest-object#jestrestoreallmocks) | ✅ | [`restoreAllMocks`](https://vitest.dev/api/vi.html#vi-restoreallmocks) |
+| [`useFakeTimers`](https://jestjs.io/docs/jest-object#jestusefaketimersfaketimersconfig) | ✅ | [`useFakeTimers`](https://vitest.dev/api/vi.html#vi-usefaketimers)[^4] |
+| [`useRealTimers`](https://jestjs.io/docs/jest-object#jestuserealtimers) | ✅ | [`useRealTimers`](https://vitest.dev/api/vi.html#vi-userealtimers) |
+| [`runAllTicks`](https://jestjs.io/docs/jest-object#jestrunallticks) | ✅ | [`runAllTicks`](https://vitest.dev/api/vi.html#vi-runallticks) |
+| [`runAllTimers`](https://jestjs.io/docs/jest-object#jestrunalltimers) | ✅ | [`runAllTimers`](https://vitest.dev/api/vi.html#vi-runalltimers) |
+| [`runAllTimersAsync`](https://jestjs.io/docs/jest-object#jestrunalltimersasync) | ✅ | [`runAllTimersAsync`](https://vitest.dev/api/vi.html#vi-runalltimersasync) |
+| [`runAllImmediates`](https://jestjs.io/docs/jest-object#jestrunallimmediates) | ❌ | - |
+| [`advanceTimersByTime`](https://jestjs.io/docs/jest-object#jestadvancetimersbytimemstorun) | ✅ | [`advanceTimersByTime`](https://vitest.dev/api/vi.html#vi-advancetimersbytime) |
+| [`advanceTimersByTimeAsync`](https://jestjs.io/docs/jest-object#jestadvancetimersbytimeasyncmstorun) | ✅ | [`advanceTimersByTimeAsync`](https://vitest.dev/api/vi.html#vi-advancetimersbytimeasync) |
+| [`runOnlyPendingTimers`](https://jestjs.io/docs/jest-object#jestrunonlypendingtimers) | ✅ | [`runOnlyPendingTimers`](https://vitest.dev/api/vi.html#vi-runonlypendingtimers) |
+| [`runOnlyPendingTimersAsync`](https://jestjs.io/docs/jest-object#jestrunonlypendingtimersasync) | ✅ | [`runOnlyPendingTimersAsync`](https://vitest.dev/api/vi.html#vi-runonlypendingtimersasync) |
+| [`advanceTimersToNextTimer`](https://jestjs.io/docs/jest-object#jestadvancetimerstonexttimersteps) | ✅ | [`advanceTimersToNextTimer`](https://vitest.dev/api/vi.html#vi-advancetimerstonexttimer) |
+| [`advanceTimersToNextTimerAsync`](https://jestjs.io/docs/jest-object#jestadvancetimerstonexttimerasyncsteps) | ✅ | [`advanceTimersToNextTimerAsync`](https://vitest.dev/api/vi.html#vi-advancetimerstonexttimerasync) |
+| [`getTimerCount`](https://jestjs.io/docs/jest-object#jestgettimercount) | ✅ | [`getTimerCount`](https://vitest.dev/api/vi.html#vi-gettimercount) |
+| [`now`](https://jestjs.io/docs/jest-object#jestnow) | ❌ | - |
+| [`setSystemTime`](https://jestjs.io/docs/jest-object#jestsetsystemtimenow-number--date) | ✅ | [`setSystemTime`](https://vitest.dev/api/vi.html#vi-setsystemtime) |
+| [`getRealSystemTime`](https://jestjs.io/docs/jest-object#jestgetrealsystemtime) | ❌ | - |
+| [`getSeed`](https://jestjs.io/docs/jest-object#jestgetseed) | ❌ | - |
+| [`isEnvironmentTornDown`](https://jestjs.io/docs/jest-object#jestisenvironmenttorndown) | ❌ | - |
+| [`retryTimes`](https://jestjs.io/docs/jest-object#jestretrytimesnumretries-options) | ❌ | - |
+| [`setTimeout`](https://jestjs.io/docs/jest-object#jestsettimeouttimeout) | ✅ | [`setConfig`](https://vitest.dev/guide/migration.html#timeout) |
 
 ### Jest Types
 
 | Types | Supported? |
+| ----- | :--------: |
 | [`Mock`](https://jestjs.io/docs/mock-function-api#jestmockt) | ✅ |
 | [`Mocked`](https://jestjs.io/docs/jest-object#jestmockedsource) | ✅ |
 | [`Replaced`](https://jestjs.io/docs/mock-function-api#jestreplacedsource) | ❌ |
@@ -128,3 +158,13 @@ Jest to Vitest CLI migration tool
 ## License
 
 This project is licensed under the [MIT License](./LICENSE)
+
+[^1]: Converted to `number`
+[^2]: Forcefully transformed to `v8`
+[^3]: `global` is extracted
+[^4]: [See transformer here](./src/mapper.ts)
+[^5]: Forcefully set to `false` by default, but can be enabled by passing `global` flag in the CLI
+[^6]: Only supported if provided via CLI
+[^7]: You need to convert each of them manually to [ESM format](https://vitest.dev/guide/snapshot#custom-serializer)
+[^8]: `threads` if `true`, `forks` otherwise.
+[^9]: Transformed into an `async` function
