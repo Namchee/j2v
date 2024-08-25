@@ -1,9 +1,6 @@
-import { describe, it, } from "vitest";
+import { describe, it } from "vitest";
 
 import type { Config as JestConfig } from "jest";
-
-
-import {expect, } from '@jest/globals';
 
 import { transformJestConfigToVitest } from "./mapper";
 
