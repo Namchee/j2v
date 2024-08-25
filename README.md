@@ -115,8 +115,11 @@ Jest to Vitest CLI migration tool
 
 ### Jest Types
 
-| Types | Supported? | Transformed To |
-| [`Mocked`](https://jestjs.io/docs/jest-object#jestmockedsource) | ✅ | [`Mocked`]()
+| Types | Supported? |
+| [`Mock`](https://jestjs.io/docs/mock-function-api#jestmockt) | ✅ |
+| [`Mocked`](https://jestjs.io/docs/jest-object#jestmockedsource) | ✅ |
+| [`Replaced`](https://jestjs.io/docs/mock-function-api#jestreplacedsource) | ❌ |
+| [`Spied`](https://jestjs.io/docs/mock-function-api#jestspiedsource) | ❌ |
 
 ## Acknowledgments
 
