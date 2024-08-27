@@ -325,7 +325,7 @@ export function transformJestTestToVitest(
     const hasUtils = transformJestUtils(source);
     const neededTypes = transformJestTypes(source);
 
-    const imports = hasUtils || neededTypes ? ["vi"] : [];
+    const imports = hasUtils || neededTypes.length ? ["vi"] : [];
 
     if (!useGlobals) {
       imports.push(...getJestGlobals(source));

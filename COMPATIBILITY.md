@@ -2,7 +2,7 @@
 
 Below are the list of compatible Jest's API that can be transformed. List of API are taken from [official Jest documentation](https://jestjs.io/docs)
 
-### Configuration and CLI
+## Configuration and CLI
 
 | Key | Supported? | Transformed To |
 | --- | :--------: | -------------- |
@@ -77,7 +77,7 @@ Below are the list of compatible Jest's API that can be transformed. List of API
 | [`workerIdleMemoryLimit`](https://jestjs.io/docs/configuration#workeridlememorylimit-numberstring) | ✅ | [`poolOptions.vmThreads.memoryLimit`](https://vitest.dev/config/#pooloptions-vmthreads-memorylimit) |
 | [`workerThreads`](https://jestjs.io/docs/configuration#workerthreads) | ✅ | [`pool`](https://vitest.dev/config/#pool)[^8] |
 
-### Jest API
+## Jest API
 
 | API | Supported? | Transformed To |
 | --- | :--------: | -------------- |
@@ -124,7 +124,7 @@ Below are the list of compatible Jest's API that can be transformed. List of API
 | [`retryTimes`](https://jestjs.io/docs/jest-object#jestretrytimesnumretries-options) | ❌ | - |
 | [`setTimeout`](https://jestjs.io/docs/jest-object#jestsettimeouttimeout) | ✅ | [`setConfig`](https://vitest.dev/guide/migration.html#timeout) |
 
-### Jest Types
+## Jest Types
 
 | Types | Supported? |
 | ----- | :--------: |

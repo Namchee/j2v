@@ -8,6 +8,24 @@ describe("transformJestTestToVitest", () => {
     Logger.init(false);
   });
 
+  it("should transform generic tests", () => {
+    const path = "some/random/path.ts";
+    const code = `describe('sample test', () => {
+  it('return 2', () => {
+    const result = 1 + 1;
+
+    expect(result).toBe(2);
+  });
+});`;
+
+    const transformed = transformJestTestToVitest([{
+      path,
+      content: code,
+    }]);
+
+    expect(transformed[0]?.content).toContain(`import { describe, it, expect } from "vitest";`);
+  })
+
   it("should transform advanceTimersToNextTimer to Vitest", () => {
     const path = "some/random/path.ts";
     const code = `describe('sample test', () => {
