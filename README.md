@@ -16,7 +16,13 @@ Jest to Vitest CLI migration tool
   - [x] Mod the existing one
 - [x] Dependency Migration
 - [x] CLI
-- [ ] Test file converter
+- [x] Test file converter
+
+## Compatibility
+
+Not all of Jest APIs and quirks will be replaced by this utility, as some of them don't have any equivalent property in Vitest.
+
+For the list of all compatible APIs, please see the [compatibility list](./COMPATIBILITY.md)
 
 ## Acknowledgments
 
