@@ -8,7 +8,7 @@ describe("transformJestTestToVitest", () => {
     Logger.init(false);
   });
 
-  it("should transform generic tests", () => {
+  it("should transform generic test", () => {
     const path = "some/random/path.ts";
     const code = `describe('sample test', () => {
   it('return 2', () => {
@@ -24,7 +24,50 @@ describe("transformJestTestToVitest", () => {
     }]);
 
     expect(transformed[0]?.content).toContain(`import { describe, it, expect } from "vitest";`);
-  })
+  });
+
+  it("should transform requireActual correctly", () => {
+    const path = "some/random/path.ts";
+    const code = `jest.mock('../myModule', () => {
+  // Require the original module to not be mocked...
+  const originalModule =
+    jest.requireActual<typeof import('../myModule')>('../myModule');
+
+  return {
+    __esModule: true, // Use it when dealing with esModules
+    ...originalModule,
+    getRandom: jest.fn(() => 10),
+  };
+});`;
+
+    const transformed = transformJestTestToVitest([{
+      path,
+      content: code,
+    }]);
+
+    expect(transformed[0]?.content).toContain(`vi.mock('../myModule', async () => {`);
+    expect(transformed[0]?.content).toContain('await vi.importActual');
+  });
+
+  it("should transform requireMock correctly", () => {
+    const path = "some/random/path.ts";
+    const code = `test('sample test', () => {
+  const mathMock = jest.requireMock('./math');
+
+  mathMock.add = jest.fn().mockReturnValue(10);
+
+  expect(mathMock.add(3, 5)).toBe(10);
+  expect(mathMock.add).toHaveBeenCalledWith(3, 5);
+});`;
+
+    const transformed = transformJestTestToVitest([{
+      path,
+      content: code,
+    }]);
+
+    expect(transformed[0]?.content).toContain(`test('sample test', async () => {`);
+    expect(transformed[0]?.content).toContain('const mathMock = await vi.importMock(');
+  });
 
   it("should transform advanceTimersToNextTimer to Vitest", () => {
     const path = "some/random/path.ts";
