@@ -1,5 +1,8 @@
+
+
 import {
   type CallExpression,
+  IndentationText,
   Project,
   type SourceFile,
   SyntaxKind,
@@ -38,27 +41,41 @@ const JEST_UTILS: Record<string, VitestUtil> = {
       );
     }
 
-    const props = args.getChildrenOfKind(SyntaxKind.PropertyAssignment);
+    const rawArgObject = args.asKindOrThrow(SyntaxKind.ObjectLiteralExpression);
+    const props = rawArgObject.getProperties();
+
     const newTimerOptions: Record<string, unknown> = {};
 
     for (const prop of props) {
-      const value = prop.getChildAtIndex(1).getText();
+      const key = prop.getChildAtIndex(0).getText();
+      const value = prop.getChildAtIndex(2).getText();
 
-      switch (prop.getText()) {
+      switch (key) {
         case "advanceTimers": {
-          newTimerOptions.shouldAdvanceTime = "true";
+          rawArgObject.addPropertyAssignment({
+            name: 'shouldAdvanceTime',
+            initializer: 'true',
+          });
 
-          if (!Number.isNaN(value)) {
-            newTimerOptions.advanceTimeDelta = value;
+          const tryNumber = Number(value.replace(/_/g, ''));
+
+          if (!Number.isNaN(tryNumber)) {
+            rawArgObject.addPropertyAssignment({
+              name: 'advanceTimeDelta',
+              initializer: value,
+            })
           }
+
+          prop.remove();
 
           break;
         }
         case "now": {
-          newTimerOptions.now = value;
           break;
         }
         case "doNotFake": {
+          const jestTimerMethods = JSON.parse(value.replace(/[`']/g, '"'));
+
           // https://jestjs.io/docs/jest-object#fake-timers
           const mockedByJest = [
             "Date",
@@ -78,20 +95,34 @@ const JEST_UTILS: Record<string, VitestUtil> = {
             "clearTimeout",
           ];
 
-          newTimerOptions.toFake = mockedByJest.filter(
-            (method) => !JSON.parse(value).includes(method),
+          const vitestTimerMethods = mockedByJest.filter(
+            (method) => !jestTimerMethods.includes(method),
           );
+
+          rawArgObject.addPropertyAssignment({
+            name: 'toFake',
+            initializer: JSON.stringify(vitestTimerMethods, null, 2),
+          });
+          prop.remove();
+
           break;
         }
         case "timerLimit": {
-          newTimerOptions.loopLimit = value;
+          rawArgObject.addPropertyAssignment({
+            name: 'loopLimit',
+            initializer: value,
+          });
+
+          prop.remove();
+
+          break;
+        }
+        default: {
+          prop.remove();
           break;
         }
       }
     }
-
-    expr.insertArgument(0, JSON.stringify(newTimerOptions));
-    expr.removeArgument(1);
   },
   useRealTimers: "useRealTimers",
   clearAllTimers: "clearAllTimers",
@@ -323,7 +354,12 @@ export function transformJestTestToVitest(
       continue;
     }
 
-    const project = new Project();
+    const project = new Project({
+      manipulationSettings: {
+        indentationText: IndentationText.TwoSpaces,
+        insertSpaceAfterOpeningAndBeforeClosingNonemptyBraces: true,
+      }
+    });
     const source = project.createSourceFile(file.path, file.content);
 
     const hasUtils = transformJestUtils(source);
