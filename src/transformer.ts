@@ -39,12 +39,12 @@ const JEST_UTILS: Record<string, VitestUtil> = {
       Logger.warning(
         `j2v cannot transform \`jest.useFakeTimers\` on line ${expr.getStartLineNumber(true)} in \`${source.getBaseName()}\` correctly. You might want to transform it to Vitest equivalent manually`,
       );
+
+      return;
     }
 
     const rawArgObject = args.asKindOrThrow(SyntaxKind.ObjectLiteralExpression);
     const props = rawArgObject.getProperties();
-
-    const newTimerOptions: Record<string, unknown> = {};
 
     for (const prop of props) {
       const key = prop.getChildAtIndex(0).getText();
@@ -216,6 +216,8 @@ const JEST_UTILS: Record<string, VitestUtil> = {
       Logger.warning(
         `j2v cannot transform \`jest.mocked\` on line ${expr.getStartLineNumber(true)} in \`${source.getBaseName()}\` correctly. You might want to transform it to Vitest equivalent manually`,
       );
+
+      return;
     }
 
     const props = args[1]?.getChildrenOfKind(SyntaxKind.PropertyAssignment);
@@ -227,7 +229,7 @@ const JEST_UTILS: Record<string, VitestUtil> = {
       const identifier = prop.getFirstChildByKind(SyntaxKind.Identifier);
 
       if (identifier?.getText() === "shallow") {
-        const value = args[1]?.getChildrenOfKind(SyntaxKind.FalseKeyword);
+        const value = prop.getChildrenOfKind(SyntaxKind.FalseKeyword);
 
         expr.insertArgument(1, value?.length ? "true" : "false");
         expr.removeArgument(2);

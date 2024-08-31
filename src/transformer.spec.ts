@@ -64,15 +64,64 @@ describe("transformJestTestToVitest", () => {
     expect(transformed[0]?.content).toContain('toFake');
   });
 
+  it("should transform jest.mocked without arguments correctly", () => {
+    const path = "some/random/path.ts";
+    const code = `import { fetchData } from './api';
+
+jest.mock('./api');
+
+test('example test using jest.mocked', async () => {
+  const mockedFetchData = jest.mocked(fetchData);
+
+  mockedFetchData.mockResolvedValue('mocked data');
+
+  const result = await fetchData();
+
+  expect(result).toBe('mocked data');
+  expect(mockedFetchData).toHaveBeenCalledTimes(1);
+});`;
+
+    const transformed = transformJestTestToVitest([{
+      path,
+      content: code,
+    }]);
+
+    expect(transformed[0]?.content).toContain('vi.mocked(fetchData);');
+  });
+
+  it("should transform jest.mocked with arguments correctly", () => {
+    const path = "some/random/path.ts";
+    const code = `import { fetchData } from './api';
+
+jest.mock('./api');
+
+test('example test using jest.mocked', async () => {
+  const mockedFetchData = jest.mocked(fetchData, { shallow: false });
+
+  mockedFetchData.mockResolvedValue('mocked data');
+
+  const result = await fetchData();
+
+  expect(result).toBe('mocked data');
+  expect(mockedFetchData).toHaveBeenCalledTimes(1);
+});`;
+
+    const transformed = transformJestTestToVitest([{
+      path,
+      content: code,
+    }]);
+
+    expect(transformed[0]?.content).toContain('vi.mocked(fetchData, true);');
+  });
+
   it("should transform requireActual correctly", () => {
     const path = "some/random/path.ts";
     const code = `jest.mock('../myModule', () => {
-  // Require the original module to not be mocked...
   const originalModule =
     jest.requireActual<typeof import('../myModule')>('../myModule');
 
   return {
-    __esModule: true, // Use it when dealing with esModules
+    __esModule: true,
     ...originalModule,
     getRandom: jest.fn(() => 10),
   };
