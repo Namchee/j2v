@@ -83,6 +83,10 @@ const JEST_UTILS: Record<string, VitestUtil> = {
           );
           break;
         }
+        case "timerLimit": {
+          newTimerOptions.loopLimit = value;
+          break;
+        }
       }
     }
 
@@ -167,7 +171,7 @@ const JEST_UTILS: Record<string, VitestUtil> = {
   setTimeout: (expr: CallExpression) => {
     const args = expr.getArguments();
 
-    expr.setExpression(`vi.setConfig({ testTimeout: ${args[0]?.getText()} }})`);
+    expr.replaceWithText(`vi.setConfig({ testTimeout: ${args[0]?.getText()} })`);
   },
   mocked: (expr: CallExpression, source: SourceFile) => {
     expr.setExpression("vi.mocked");

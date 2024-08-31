@@ -159,6 +159,7 @@ function convertJestTimerConfigToVitest(
         )
       : undefined,
     now: timers.now,
+    loopLimit: timers.timerLimit,
   };
 }
 

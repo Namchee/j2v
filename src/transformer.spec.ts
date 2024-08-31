@@ -1,4 +1,4 @@
-import { beforeAll, describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it, } from "vitest";
 
 import { Logger } from "./logger";
 import { transformJestTestToVitest } from "./transformer";
@@ -24,6 +24,10 @@ describe("transformJestTestToVitest", () => {
     }]);
 
     expect(transformed[0]?.content).toContain(`import { describe, it, expect } from "vitest";`);
+  });
+
+  it("should transform useFakeTimers with arguments correctly", () => {
+    const path = "some/random/path.ts";
   });
 
   it("should transform requireActual correctly", () => {
@@ -69,6 +73,24 @@ describe("transformJestTestToVitest", () => {
     expect(transformed[0]?.content).toContain('const mathMock = await vi.importMock(');
   });
 
+  it("should transform setTimeout correctly", () => {
+    const path = "some/random/path.ts";
+    const code = `jest.setTimeout(10000);
+
+test('example test that may take longer', async () => {
+  const result = await new Promise((resolve) => setTimeout(() => resolve('done'), 9000));
+
+  expect(result).toBe('done');
+});`;
+
+    const transformed = transformJestTestToVitest([{
+      path,
+      content: code,
+    }]);
+
+    expect(transformed[0]?.content).toContain('vi.setConfig({ testTimeout: 10000 });');
+  });
+
   it("should transform advanceTimersToNextTimer to Vitest", () => {
     const path = "some/random/path.ts";
     const code = `describe('sample test', () => {
@@ -102,6 +124,8 @@ describe("transformJestTestToVitest", () => {
       content: code,
     }]);
 
+    expect(transformed[0]?.content).toContain('vi.useFakeTimers();');
+    expect(transformed[0]?.content).toContain('vi.useRealTimers();');
     expect(transformed[0]?.content).toContain('vi.advanceTimersToNextTimer();');
   });
 
@@ -138,6 +162,8 @@ describe("transformJestTestToVitest", () => {
       content: code,
     }]);
 
+    expect(transformed[0]?.content).toContain('vi.useFakeTimers();');
+    expect(transformed[0]?.content).toContain('vi.useRealTimers();');
     expect(transformed[0]?.content).toContain('vi.advanceTimersToNextTimer().advanceTimersToNextTimer();');
   });
 });
