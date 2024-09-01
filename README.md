@@ -24,6 +24,10 @@ Not all of Jest APIs and quirks will be replaced by this utility, as some of the
 
 For the list of all compatible APIs, please see the [compatibility list](./COMPATIBILITY.md)
 
+## Caveats
+
+1. Indentation *may* be incorrect.
+
 ## Acknowledgments
 
 1. This project would not exist without the existence of this [Jest migration to Vitest gist](https://gist.github.com/wojtekmaj/6defa1f358daae28bd52b7b6dbeb7ab6)

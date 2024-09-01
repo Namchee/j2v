@@ -2,7 +2,6 @@
 
 import {
   type CallExpression,
-  IndentationText,
   Project,
   type SourceFile,
   SyntaxKind,
@@ -169,7 +168,35 @@ const JEST_UTILS: Record<string, VitestUtil> = {
   restoreAllMocks: "restoreAllMocks",
   fn: "fn",
   spyOn: "spyOn",
-  mock: "mock",
+  mock: (expr: CallExpression) => {
+    expr.setExpression('vi.mock');
+
+    const args = expr.getArguments();
+    if (args.length === 1) {
+      return;
+    }
+
+    const factory = args[1];
+    const parenthesizedExpr = factory?.getFirstDescendantByKind(SyntaxKind.ParenthesizedExpression);
+    if (parenthesizedExpr) {
+      const defaultModule = parenthesizedExpr.getFirstDescendantByKindOrThrow(SyntaxKind.ObjectLiteralExpression);
+      const originalContent = defaultModule.getProperties().map(prop => prop.getText()).join(', ');
+
+      console.log(originalContent);
+
+      for (const prop of defaultModule.getProperties()) {
+        prop.remove();
+      }
+
+      defaultModule?.addPropertyAssignment({
+        name: 'default',
+        initializer: `{ ${originalContent} }`,
+      });
+    } else {
+      console.log(expr.getText());
+      console.log('no expression');
+    }
+  },
   doMock: "doMock",
   unmock: "unmock",
   doUnmock: "doUnmock",
@@ -272,6 +299,10 @@ function transformJestUtils(source: SourceFile): boolean {
   const expressions = source.getDescendantsOfKind(SyntaxKind.CallExpression);
 
   for (const expression of expressions) {
+    if (expression.wasForgotten()) {
+      continue;
+    }
+
     const callExpression = expression.getFirstChildIfKind(
       SyntaxKind.PropertyAccessExpression,
     );
@@ -356,12 +387,7 @@ export function transformJestTestToVitest(
       continue;
     }
 
-    const project = new Project({
-      manipulationSettings: {
-        indentationText: IndentationText.TwoSpaces,
-        insertSpaceAfterOpeningAndBeforeClosingNonemptyBraces: true,
-      }
-    });
+    const project = new Project();
     const source = project.createSourceFile(file.path, file.content);
 
     const hasUtils = transformJestUtils(source);

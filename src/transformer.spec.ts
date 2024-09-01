@@ -26,6 +26,20 @@ describe("transformJestTestToVitest", () => {
     expect(transformed[0]?.content).toContain(`import { describe, it, expect } from "vitest";`);
   });
 
+  it("should transform generic jest.mock correctly", () => {
+    const path = "some/random/path.ts";
+    const code = `jest.mock('./api', () => ({
+  fetchData: jest.fn().mockResolvedValue('mocked data'),
+}));`;
+
+    const transformed = transformJestTestToVitest([{
+      path,
+      content: code,
+    }]);
+
+    console.log(transformed[0]?.content);
+  });
+
   it("should transform useFakeTimers with arguments correctly", () => {
     const path = "some/random/path.ts";
     const code = `test('example test using jest fake timers with multiple arguments', () => {
