@@ -2,7 +2,9 @@
 
 import {
   type CallExpression,
+  IndentationText,
   Project,
+  QuoteKind,
   type SourceFile,
   SyntaxKind,
 } from "ts-morph";
@@ -180,9 +182,7 @@ const JEST_UTILS: Record<string, VitestUtil> = {
     const parenthesizedExpr = factory?.getFirstDescendantByKind(SyntaxKind.ParenthesizedExpression);
     if (parenthesizedExpr) {
       const defaultModule = parenthesizedExpr.getFirstDescendantByKindOrThrow(SyntaxKind.ObjectLiteralExpression);
-      const originalContent = defaultModule.getProperties().map(prop => prop.getText()).join(', ');
-
-      console.log(originalContent);
+      const originalContent = defaultModule.getText();
 
       for (const prop of defaultModule.getProperties()) {
         prop.remove();
@@ -190,11 +190,14 @@ const JEST_UTILS: Record<string, VitestUtil> = {
 
       defaultModule?.addPropertyAssignment({
         name: 'default',
-        initializer: `{ ${originalContent} }`,
+        initializer: originalContent,
       });
     } else {
-      console.log(expr.getText());
-      console.log('no expression');
+      const returnStatement = factory?.getDescendantsOfKind(SyntaxKind.ReturnStatement)[0];
+      const defaultModule = returnStatement?.getDescendantsOfKind(SyntaxKind.ObjectLiteralExpression);
+      if (!defaultModule) {
+
+      }
     }
   },
   doMock: "doMock",
@@ -387,7 +390,13 @@ export function transformJestTestToVitest(
       continue;
     }
 
-    const project = new Project();
+    const project = new Project({
+      manipulationSettings: {
+        indentationText: IndentationText.TwoSpaces,
+        insertSpaceAfterOpeningAndBeforeClosingNonemptyBraces: true,
+        quoteKind: QuoteKind.Single,
+      },
+    });
     const source = project.createSourceFile(file.path, file.content);
 
     const hasUtils = transformJestUtils(source);

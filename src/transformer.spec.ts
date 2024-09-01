@@ -23,7 +23,7 @@ describe("transformJestTestToVitest", () => {
       content: code,
     }]);
 
-    expect(transformed[0]?.content).toContain(`import { describe, it, expect } from "vitest";`);
+    expect(transformed[0]?.content).toContain(`import { describe, it, expect } from 'vitest';`);
   });
 
   it("should transform generic jest.mock correctly", () => {
@@ -37,7 +37,7 @@ describe("transformJestTestToVitest", () => {
       content: code,
     }]);
 
-    console.log(transformed[0]?.content);
+    expect(transformed[0]?.content).toContain('default: {');
   });
 
   it("should transform useFakeTimers with arguments correctly", () => {
