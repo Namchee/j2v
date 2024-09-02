@@ -26,7 +26,10 @@ For the list of all compatible APIs, please see the [compatibility list](./COMPA
 
 ## Caveats
 
-1. Indentation *may* be incorrect.
+1. Currently, the code will be formatted with the following style:
+  - Two spaces indentation
+  - LF end of line
+  - Comma dangle
 
 ## Acknowledgments
 
