@@ -1,5 +1,3 @@
-
-
 import {
   type CallExpression,
   IndentationText,
@@ -54,17 +52,17 @@ const JEST_UTILS: Record<string, VitestUtil> = {
       switch (key) {
         case "advanceTimers": {
           rawArgObject.addPropertyAssignment({
-            name: 'shouldAdvanceTime',
-            initializer: 'true',
+            name: "shouldAdvanceTime",
+            initializer: "true",
           });
 
-          const tryNumber = Number(value.replace(/_/g, ''));
+          const tryNumber = Number(value.replace(/_/g, ""));
 
           if (!Number.isNaN(tryNumber)) {
             rawArgObject.addPropertyAssignment({
-              name: 'advanceTimeDelta',
+              name: "advanceTimeDelta",
               initializer: value,
-            })
+            });
           }
 
           prop.remove();
@@ -101,7 +99,7 @@ const JEST_UTILS: Record<string, VitestUtil> = {
           );
 
           rawArgObject.addPropertyAssignment({
-            name: 'toFake',
+            name: "toFake",
             initializer: JSON.stringify(vitestTimerMethods, null, 2),
           });
           prop.remove();
@@ -110,7 +108,7 @@ const JEST_UTILS: Record<string, VitestUtil> = {
         }
         case "timerLimit": {
           rawArgObject.addPropertyAssignment({
-            name: 'loopLimit',
+            name: "loopLimit",
             initializer: value,
           });
 
@@ -171,7 +169,7 @@ const JEST_UTILS: Record<string, VitestUtil> = {
   fn: "fn",
   spyOn: "spyOn",
   mock: (expr: CallExpression) => {
-    expr.setExpression('vi.mock');
+    expr.setExpression("vi.mock");
 
     const args = expr.getArguments();
     if (args.length === 1) {
@@ -179,9 +177,13 @@ const JEST_UTILS: Record<string, VitestUtil> = {
     }
 
     const factory = args[1];
-    const parenthesizedExpr = factory?.getFirstDescendantByKind(SyntaxKind.ParenthesizedExpression);
+    const parenthesizedExpr = factory?.getFirstDescendantByKind(
+      SyntaxKind.ParenthesizedExpression,
+    );
     if (parenthesizedExpr) {
-      const defaultModule = parenthesizedExpr.getFirstDescendantByKindOrThrow(SyntaxKind.ObjectLiteralExpression);
+      const defaultModule = parenthesizedExpr.getFirstDescendantByKindOrThrow(
+        SyntaxKind.ObjectLiteralExpression,
+      );
       const originalContent = defaultModule.getText();
 
       for (const prop of defaultModule.getProperties()) {
@@ -189,15 +191,16 @@ const JEST_UTILS: Record<string, VitestUtil> = {
       }
 
       defaultModule?.addPropertyAssignment({
-        name: 'default',
+        name: "default",
         initializer: originalContent,
       });
     } else {
-      const returnStatement = factory?.getDescendantsOfKind(SyntaxKind.ReturnStatement)[0];
-      const defaultModule = returnStatement?.getDescendantsOfKind(SyntaxKind.ObjectLiteralExpression);
-      if (!defaultModule) {
-
-      }
+      const returnStatement = factory?.getDescendantsOfKind(
+        SyntaxKind.ReturnStatement,
+      )[0];
+      const defaultModule = returnStatement?.getDescendantsOfKind(
+        SyntaxKind.ObjectLiteralExpression,
+      );
     }
   },
   doMock: "doMock",
@@ -232,7 +235,9 @@ const JEST_UTILS: Record<string, VitestUtil> = {
   setTimeout: (expr: CallExpression) => {
     const args = expr.getArguments();
 
-    expr.replaceWithText(`vi.setConfig({ testTimeout: ${args[0]?.getText()} })`);
+    expr.replaceWithText(
+      `vi.setConfig({ testTimeout: ${args[0]?.getText()} })`,
+    );
   },
   mocked: (expr: CallExpression, source: SourceFile) => {
     expr.setExpression("vi.mocked");
@@ -297,47 +302,52 @@ function getJestGlobals(source: SourceFile): string[] {
   return globals;
 }
 
+function transformCallExpression(callExpr: CallExpression, source: SourceFile): boolean {
+  const propertyExpr = callExpr.getFirstChildIfKind(
+    SyntaxKind.PropertyAccessExpression,
+  );
+
+  if (!propertyExpr) {
+    return false;
+  }
+
+  const callChildren = propertyExpr.getChildren();
+  const sourceObject = callChildren[0];
+  const method = callChildren[2];
+
+  if (sourceObject?.getText() !== "jest" || !method) {
+    return false;
+  }
+
+  if (JEST_UTILS[method.getText()]) {
+    const mapping = JEST_UTILS[method.getText()];
+
+    if (typeof mapping === "function") {
+      mapping(callExpr, source);
+    } else {
+      callExpr.setExpression(`vi.${mapping}`);
+    }
+
+    return true;
+  }
+
+  Logger.warning(
+    `j2v cannot transform \`${propertyExpr.getText()}\` on line ${callExpr.getStartLineNumber(true)} in \`${source.getBaseName()}\` correctly. You might want to transform it to Vitest equivalent manually`,
+  );
+
+  return false;
+}
+
 function transformJestUtils(source: SourceFile): boolean {
   let hasUtils = false;
-  const expressions = source.getDescendantsOfKind(SyntaxKind.CallExpression);
 
-  for (const expression of expressions) {
-    if (expression.wasForgotten()) {
-      continue;
+  source.forEachDescendant((node) => {
+    switch (node.getKind()) {
+      case SyntaxKind.CallExpression:
+        hasUtils = transformCallExpression(node as CallExpression, source);
+        break;
     }
-
-    const callExpression = expression.getFirstChildIfKind(
-      SyntaxKind.PropertyAccessExpression,
-    );
-
-    if (!callExpression) {
-      continue;
-    }
-
-    const callChildren = callExpression.getChildren();
-    const sourceObject = callChildren[0];
-    const method = callChildren[2];
-
-    if (sourceObject?.getText() !== "jest" || !method) {
-      continue;
-    }
-
-    if (JEST_UTILS[method.getText()]) {
-      const mapping = JEST_UTILS[method.getText()];
-
-      if (typeof mapping === "function") {
-        mapping(expression, source);
-      } else {
-        expression.setExpression(`vi.${mapping}`);
-      }
-
-      hasUtils = true;
-    } else {
-      Logger.warning(
-        `j2v cannot transform \`${callExpression.getText()}\` on line ${expression.getStartLineNumber(true)} in \`${source.getBaseName()}\` correctly. You might want to transform it to Vitest equivalent manually`,
-      );
-    }
-  }
+  });
 
   return hasUtils;
 }
@@ -352,15 +362,15 @@ function transformJestTypes(source: SourceFile): string[] {
     const typeProp = typeName.getLastChild();
 
     if (namespace?.getText() === "jest" && typeProp) {
-      if (
-        JEST_TYPES.includes(typeProp.getText())
-      ) {
+      if (JEST_TYPES.includes(typeProp.getText())) {
         const typeName = typeProp.getText();
 
         typeProp.replaceWithText(typeName);
         neededTypes.push(typeName);
       } else {
-        typeRef.getFirstAncestorByKind(SyntaxKind.VariableDeclaration)?.removeType();
+        typeRef
+          .getFirstAncestorByKind(SyntaxKind.VariableDeclaration)
+          ?.removeType();
       }
     }
   }
