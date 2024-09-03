@@ -168,7 +168,7 @@ const JEST_UTILS: Record<string, VitestUtil> = {
   restoreAllMocks: "restoreAllMocks",
   fn: "fn",
   spyOn: "spyOn",
-  mock: (expr: CallExpression) => {
+  mock: (expr: CallExpression, source: SourceFile) => {
     expr.setExpression("vi.mock");
 
     const args = expr.getArguments();
@@ -177,30 +177,72 @@ const JEST_UTILS: Record<string, VitestUtil> = {
     }
 
     const factory = args[1];
-    const parenthesizedExpr = factory?.getFirstDescendantByKind(
-      SyntaxKind.ParenthesizedExpression,
-    );
-    if (parenthesizedExpr) {
-      const defaultModule = parenthesizedExpr.getFirstDescendantByKindOrThrow(
-        SyntaxKind.ObjectLiteralExpression,
-      );
-      const originalContent = defaultModule.getText();
+    const typechecker = source.getProject().getTypeChecker();
 
-      for (const prop of defaultModule.getProperties()) {
-        prop.remove();
+    if (
+      factory?.getKind() === SyntaxKind.ArrowFunction ||
+      factory?.getKind() === SyntaxKind.FunctionExpression
+    ) {
+      const functionNode =
+        factory.asKind(SyntaxKind.ArrowFunction) ||
+        factory.asKind(SyntaxKind.FunctionExpression);
+      const functionType = typechecker.getTypeAtLocation(factory);
+      const signature = functionType.getCallSignatures()[0];
+
+      if (signature) {
+        const body = functionNode?.getBody();
+        if (body) {
+          const returnStatements = body.getDescendantsOfKind(
+            SyntaxKind.ReturnStatement,
+          );
+
+          if (returnStatements.length > 0) {
+            const returnStatement = returnStatements[0];
+            const returnExpression = returnStatement?.getExpression();
+
+            if (returnExpression) {
+              // Check if the return expression is already wrapped with default
+              if (
+                returnExpression.getKind() ===
+                SyntaxKind.ObjectLiteralExpression
+              ) {
+                const text = returnExpression.getText();
+                if (text.startsWith("{ default:") && text.endsWith("}")) {
+                  // Already wrapped with `default`, no need to modify
+                  return;
+                }
+              }
+
+              // Check if the module actually uses default export
+              // This is a simplified check. Modify based on your project setup.
+              console.log(functionType?.getSymbol());
+              const hasDefaultExport = functionType
+                ?.getSymbol()
+                ?.getExports()
+                .some((exp) => exp.getName() === "default");
+
+              if (hasDefaultExport) {
+                // Wrap the return value in `{ default: ... }` if it is not already wrapped
+                let wrappedReturnText;
+                if (
+                  returnExpression.getKind() ===
+                  SyntaxKind.ObjectLiteralExpression
+                ) {
+                  // If it's an object literal, wrap it in `{ default: ... }`
+                  const originalReturnText = returnExpression.getText();
+                  wrappedReturnText = `{ default: ${originalReturnText} }`;
+                } else {
+                  // For other expressions, wrap them in `{ default: ... }`
+                  wrappedReturnText = `{ default: ${returnExpression.getText()} }`;
+                }
+
+                // Replace the return expression with the wrapped version
+                returnExpression.replaceWithText(wrappedReturnText);
+              }
+            }
+          }
+        }
       }
-
-      defaultModule?.addPropertyAssignment({
-        name: "default",
-        initializer: originalContent,
-      });
-    } else {
-      const returnStatement = factory?.getDescendantsOfKind(
-        SyntaxKind.ReturnStatement,
-      )[0];
-      const defaultModule = returnStatement?.getDescendantsOfKind(
-        SyntaxKind.ObjectLiteralExpression,
-      );
     }
   },
   doMock: "doMock",
@@ -302,7 +344,10 @@ function getJestGlobals(source: SourceFile): string[] {
   return globals;
 }
 
-function transformCallExpression(callExpr: CallExpression, source: SourceFile): boolean {
+function transformCallExpression(
+  callExpr: CallExpression,
+  source: SourceFile,
+): boolean {
   const propertyExpr = callExpr.getFirstChildIfKind(
     SyntaxKind.PropertyAccessExpression,
   );

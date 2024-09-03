@@ -28,7 +28,9 @@ describe("transformJestTestToVitest", () => {
 
   it("should transform generic jest.mock correctly", () => {
     const path = "some/random/path.ts";
-    const code = `jest.mock('./api', () => ({
+    const code = `import api from './api';
+
+jest.mock('./api', () => ({
   fetchData: jest.fn().mockResolvedValue('mocked data'),
 }));`;
 
