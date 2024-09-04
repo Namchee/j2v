@@ -284,21 +284,6 @@ const JEST_TYPES = {
   Spied: "Spied",
 };
 
-function getJestGlobals(source: SourceFile): string[] {
-  const globals = [];
-  const expressions = source.getDescendantsOfKind(SyntaxKind.CallExpression);
-
-  for (const expression of expressions) {
-    const identifier = expression.getChildrenOfKind(SyntaxKind.Identifier);
-
-    if (identifier[0] && JEST_GLOBALS.includes(identifier[0].getText())) {
-      globals.push(identifier[0].getText());
-    }
-  }
-
-  return globals;
-}
-
 function transformCallExpression(
   callExpr: CallExpression,
   source: SourceFile,
@@ -370,32 +355,44 @@ export function transformJestTestToVitest(
   testFiles: TestFile[],
   useGlobals = false,
 ): TestFile[] {
+  const project = new Project({
+    manipulationSettings: {
+      indentationText: IndentationText.TwoSpaces,
+      insertSpaceAfterOpeningAndBeforeClosingNonemptyBraces: true,
+      quoteKind: QuoteKind.Single,
+    },
+  });
+
   for (const file of testFiles) {
     Logger.debug(`Transforming ${file.path}`);
 
-    const project = new Project({
-      manipulationSettings: {
-        indentationText: IndentationText.TwoSpaces,
-        insertSpaceAfterOpeningAndBeforeClosingNonemptyBraces: true,
-        quoteKind: QuoteKind.Single,
-      },
-    });
     const source = project.createSourceFile(file.path, file.content);
 
     let hasUtils = false;
     const neededTypes: string[] = [];
+    const globals: string[] = [];
 
     source.forEachDescendant((node) => {
       switch (node.getKind()) {
-        case SyntaxKind.CallExpression:
+        case SyntaxKind.CallExpression: {
+          const callExpr = node as CallExpression;
+          const identifier = callExpr.getChildrenOfKind(SyntaxKind.Identifier);
+
+          if (identifier[0] && JEST_GLOBALS.includes(identifier[0].getText())) {
+            globals.push(identifier[0].getText());
+          }
+
           hasUtils = transformCallExpression(node as CallExpression, source);
           break;
+        }
 
         case SyntaxKind.TypeReference: {
           const jestTypes = transformTypeReference(node as TypeReferenceNode);
           if (jestTypes) {
             neededTypes.push(jestTypes);
           }
+
+          break;
         }
       }
     });
@@ -403,7 +400,7 @@ export function transformJestTestToVitest(
     const imports = hasUtils || neededTypes.length ? ["vi"] : [];
 
     if (!useGlobals) {
-      imports.push(...getJestGlobals(source));
+      imports.push(...globals);
     }
 
     if (imports.length) {
@@ -425,7 +422,9 @@ export function transformJestTestToVitest(
 
     removeJestImports(source);
 
+    source.formatText();
     file.content = source.getFullText();
+    source.forget();
 
     Logger.debug(`Test file ${file.path} transformed successfully`);
   }
