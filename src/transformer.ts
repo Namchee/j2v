@@ -283,16 +283,7 @@ const JEST_TYPES = {
   Spied: "Spied",
 };
 
-/**
- * Check whether the file is a Playwright test that should be skipped
- *
- * @param {string} source Source code in string
- * @returns {boolean} `true` if the source code is a Playwright test file,
- * `false` otherwise
- */
-function isPlaywrightTest(source: string): boolean {
-  return /'@playwright\/test'/.test(source);
-}
+
 
 function getJestGlobals(source: SourceFile): string[] {
   const globals = [];
@@ -404,11 +395,6 @@ export function transformJestTestToVitest(
 ): TestFile[] {
   for (const file of testFiles) {
     Logger.debug(`Transforming ${file.path}`);
-
-    if (isPlaywrightTest(file.content)) {
-      Logger.debug(`Skipped ${file.path} as it's a Playwright-based test`);
-      continue;
-    }
 
     const project = new Project({
       manipulationSettings: {
