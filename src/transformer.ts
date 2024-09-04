@@ -263,6 +263,16 @@ const JEST_UTILS: Record<string, VitestUtil> = {
       }
     }
   },
+  enableAutomock: (expr: CallExpression) => {
+    Logger.warning(
+      `Vitest doesn't support \`jest.enableAutomock\` API declared on line ${expr.getStartLineNumber(true)}. If you want to keep the automocking behavior, please register all of them as a setup file`,
+    );
+  },
+  disableAutomock: (expr: CallExpression) => {
+    Logger.warning(
+      `Vitest doesn't support \`jest.disableAutomock\` API declared on line ${expr.getStartLineNumber(true)}. If you want to keep the automocking behavior, please register all of them as a setup file`,
+    );
+  },
 };
 
 // List of commonly used (and mappable) Jest types

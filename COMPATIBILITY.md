@@ -81,8 +81,8 @@ Below are the list of compatible Jest's API that can be transformed. List of API
 
 | API | Supported? | Transformed To |
 | --- | :--------: | -------------- |
-| [`disableAutoMock`](https://jestjs.io/docs/jest-object#jestdisableautomock) | ❌ | - |
-| [`enableAutoMock`](https://jestjs.io/docs/jest-object#jestenableautomock) | ❌ | - |
+| [`disableAutoMock`](https://jestjs.io/docs/jest-object#jestdisableautomock) | ❌ | -[^11] |
+| [`enableAutoMock`](https://jestjs.io/docs/jest-object#jestenableautomock) | ❌ | -[^11] |
 | [`createMockFromModule`](https://jestjs.io/docs/jest-object#jestcreatemockfrommodulemodulename) | ❌ | - |
 | [`mock`](https://jestjs.io/docs/jest-object#jestmockmodulename-factory-options) | ✅ | [`mock`](https://vitest.dev/api/vi.html#vi-mock) |
 | [`mocked`](https://jestjs.io/docs/jest-object#jestmockedsource-options) | ✅ | [`mocked`](https://vitest.dev/api/vi.html#vi-mocked)[^10] |
@@ -130,8 +130,9 @@ Below are the list of compatible Jest's API that can be transformed. List of API
 | ----- | :--------: |
 | [`Mock`](https://jestjs.io/docs/mock-function-api#jestmockt) | ✅ |
 | [`Mocked`](https://jestjs.io/docs/jest-object#jestmockedsource) | ✅ |
-| [`Replaced`](https://jestjs.io/docs/mock-function-api#jestreplacedsource) | ❌ |
-| [`Spied`](https://jestjs.io/docs/mock-function-api#jestspiedsource) | ❌ |
+| [`Replaced`](https://jestjs.io/docs/mock-function-api#jestreplacedsource) | ✅ |
+| [`Spied`](https://jestjs.io/docs/mock-function-api#jestspiedsource) | ✅ |
+| [``]
 
 [^1]: Converted to `number`
 [^2]: Forcefully transformed to `v8`
@@ -140,6 +141,7 @@ Below are the list of compatible Jest's API that can be transformed. List of API
 [^5]: Forcefully set to `false` by default, but can be enabled by passing `global` flag in the CLI
 [^6]: Only supported if provided via CLI
 [^7]: You need to convert each of them manually to [ESM format](https://vitest.dev/guide/snapshot#custom-serializer)
-[^8]: `threads` if `true`, `forks` otherwise.
+[^8]: `threads` if `true`, `forks` otherwise
 [^9]: Transformed into an `async` function
 [^10]: If the factory function returns a primitive value, it will be wrapped in `default: <value>`. [ES6 default module behavior in Vitest](https://vitest.dev/api/vi.html#mock-modules)
+[^11]: A warning will be issued if detected
