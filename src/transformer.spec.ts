@@ -26,7 +26,7 @@ describe("transformJestTestToVitest", () => {
     expect(transformed[0]?.content).toContain(`import { describe, it, expect } from 'vitest';`);
   });
 
-  it("should transform generic jest.mock correctly", () => {
+  it("should not wrap jest.mock factory with default if the return type is an object", () => {
     const path = "some/random/path.ts";
     const code = `import api from './api';
 
@@ -39,7 +39,35 @@ jest.mock('./api', () => ({
       content: code,
     }]);
 
-    expect(transformed[0]?.content).toContain('default: {');
+    expect(transformed[0]?.content).not.toContain('default: {');
+  });
+
+  it("should wrap jest.mock factory with default if the return type is a primitive", () => {
+    const path = "some/random/path.ts";
+    const code = `import api from './api';
+
+jest.mock('./api', () => 5);`;
+
+    const transformed = transformJestTestToVitest([{
+      path,
+      content: code,
+    }]);
+
+    expect(transformed[0]?.content).toContain('default: 5');
+  });
+
+  it("should wrap jest.mock factory with default if the return type is a function", () => {
+    const path = "some/random/path.ts";
+    const code = `import api from './api';
+
+jest.mock('./api', () => function() { return 5; });`;
+
+    const transformed = transformJestTestToVitest([{
+      path,
+      content: code,
+    }]);
+
+    expect(transformed[0]?.content).toContain('default: function() { return 5; }');
   });
 
   it("should transform useFakeTimers with arguments correctly", () => {

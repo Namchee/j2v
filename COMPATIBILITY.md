@@ -85,7 +85,7 @@ Below are the list of compatible Jest's API that can be transformed. List of API
 | [`enableAutoMock`](https://jestjs.io/docs/jest-object#jestenableautomock) | ❌ | - |
 | [`createMockFromModule`](https://jestjs.io/docs/jest-object#jestcreatemockfrommodulemodulename) | ❌ | - |
 | [`mock`](https://jestjs.io/docs/jest-object#jestmockmodulename-factory-options) | ✅ | [`mock`](https://vitest.dev/api/vi.html#vi-mock) |
-| [`mocked`](https://jestjs.io/docs/jest-object#jestmockedsource-options) | ✅ | [`mocked`](https://vitest.dev/api/vi.html#vi-mocked) |
+| [`mocked`](https://jestjs.io/docs/jest-object#jestmockedsource-options) | ✅ | [`mocked`](https://vitest.dev/api/vi.html#vi-mocked)[^10] |
 | [`unmock`](https://jestjs.io/docs/jest-object#jestunmockmodulename) | ✅ | [`unmock`](https://vitest.dev/api/vi.html#vi-unmock) |
 | [`deepUnmock`](https://jestjs.io/docs/jest-object#jestdeepunmockmodulename) | ❌ | - |
 | [`doMock`](https://jestjs.io/docs/jest-object#jestdomockmodulename-factory-options) | ✅ | [`doMock`](https://vitest.dev/api/vi.html#vi-domock) |
@@ -142,3 +142,4 @@ Below are the list of compatible Jest's API that can be transformed. List of API
 [^7]: You need to convert each of them manually to [ESM format](https://vitest.dev/guide/snapshot#custom-serializer)
 [^8]: `threads` if `true`, `forks` otherwise.
 [^9]: Transformed into an `async` function
+[^10]: If the factory function returns a primitive value, it will be wrapped in `default: <value>`. [ES6 default module behavior in Vitest](https://vitest.dev/api/vi.html#mock-modules)

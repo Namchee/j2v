@@ -168,7 +168,8 @@ const JEST_UTILS: Record<string, VitestUtil> = {
   restoreAllMocks: "restoreAllMocks",
   fn: "fn",
   spyOn: "spyOn",
-  mock: (expr: CallExpression, source: SourceFile) => {
+  // TODO: please confirm to Vitest team about returning primitives from a block
+  mock: (expr: CallExpression) => {
     expr.setExpression("vi.mock");
 
     const args = expr.getArguments();
@@ -176,72 +177,21 @@ const JEST_UTILS: Record<string, VitestUtil> = {
       return;
     }
 
-    const factory = args[1];
-    const typechecker = source.getProject().getTypeChecker();
+    const factoryArgs = args[1];
 
-    if (
-      factory?.getKind() === SyntaxKind.ArrowFunction ||
-      factory?.getKind() === SyntaxKind.FunctionExpression
-    ) {
-      const functionNode =
-        factory.asKind(SyntaxKind.ArrowFunction) ||
-        factory.asKind(SyntaxKind.FunctionExpression);
-      const functionType = typechecker.getTypeAtLocation(factory);
-      const signature = functionType.getCallSignatures()[0];
+    if (factoryArgs) {
+      const factoryFn = factoryArgs.asKind(SyntaxKind.ArrowFunction) || factoryArgs.asKind(SyntaxKind.FunctionExpression);
+      const isNotPrimitive = factoryFn?.getChildrenOfKind(SyntaxKind.Block).length || factoryFn?.getChildrenOfKind(SyntaxKind.ParenthesizedExpression).length;
 
-      if (signature) {
-        const body = functionNode?.getBody();
-        if (body) {
-          const returnStatements = body.getDescendantsOfKind(
-            SyntaxKind.ReturnStatement,
-          );
+      if (isNotPrimitive) {
+        return;
+      }
 
-          if (returnStatements.length > 0) {
-            const returnStatement = returnStatements[0];
-            const returnExpression = returnStatement?.getExpression();
-
-            if (returnExpression) {
-              // Check if the return expression is already wrapped with default
-              if (
-                returnExpression.getKind() ===
-                SyntaxKind.ObjectLiteralExpression
-              ) {
-                const text = returnExpression.getText();
-                if (text.startsWith("{ default:") && text.endsWith("}")) {
-                  // Already wrapped with `default`, no need to modify
-                  return;
-                }
-              }
-
-              // Check if the module actually uses default export
-              // This is a simplified check. Modify based on your project setup.
-              console.log(functionType?.getSymbol());
-              const hasDefaultExport = functionType
-                ?.getSymbol()
-                ?.getExports()
-                .some((exp) => exp.getName() === "default");
-
-              if (hasDefaultExport) {
-                // Wrap the return value in `{ default: ... }` if it is not already wrapped
-                let wrappedReturnText;
-                if (
-                  returnExpression.getKind() ===
-                  SyntaxKind.ObjectLiteralExpression
-                ) {
-                  // If it's an object literal, wrap it in `{ default: ... }`
-                  const originalReturnText = returnExpression.getText();
-                  wrappedReturnText = `{ default: ${originalReturnText} }`;
-                } else {
-                  // For other expressions, wrap them in `{ default: ... }`
-                  wrappedReturnText = `{ default: ${returnExpression.getText()} }`;
-                }
-
-                // Replace the return expression with the wrapped version
-                returnExpression.replaceWithText(wrappedReturnText);
-              }
-            }
-          }
-        }
+      const returnObj = factoryFn?.getLastChild();
+      if (returnObj) {
+        returnObj.replaceWithText(`({
+  default: ${returnObj.getText()}
+})`);
       }
     }
   },
@@ -316,7 +266,12 @@ const JEST_UTILS: Record<string, VitestUtil> = {
 };
 
 // List of commonly used (and mappable) Jest types
-const JEST_TYPES = ["Mock", "Mocked", "Replaced", "Spied"];
+const JEST_TYPES = {
+  Mock: "Mock",
+  Mocked: "Mocked",
+  Replaced: "Replaced",
+  Spied: "Spied",
+};
 
 /**
  * Check whether the file is a Playwright test that should be skipped
@@ -407,7 +362,7 @@ function transformJestTypes(source: SourceFile): string[] {
     const typeProp = typeName.getLastChild();
 
     if (namespace?.getText() === "jest" && typeProp) {
-      if (JEST_TYPES.includes(typeProp.getText())) {
+      if (typeProp.getText() in JEST_TYPES) {
         const typeName = typeProp.getText();
 
         typeProp.replaceWithText(typeName);
