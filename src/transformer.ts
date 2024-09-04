@@ -389,6 +389,15 @@ export function transformJestTestToVitest(
 
           break;
         }
+
+        case SyntaxKind.Identifier: {
+          // https://vitest.dev/guide/migration.html#envs
+          if (node.getText() === 'JEST_WORKER_ID') {
+            node.replaceWithText('VITEST_POOL_ID');
+          }
+
+          break;
+        }
       }
     });
 
