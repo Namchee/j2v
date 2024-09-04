@@ -5,6 +5,7 @@ import {
   QuoteKind,
   type SourceFile,
   SyntaxKind,
+  type TypeReferenceNode,
 } from "ts-morph";
 
 import { Logger } from "./logger";
@@ -283,8 +284,6 @@ const JEST_TYPES = {
   Spied: "Spied",
 };
 
-
-
 function getJestGlobals(source: SourceFile): string[] {
   const globals = [];
   const expressions = source.getDescendantsOfKind(SyntaxKind.CallExpression);
@@ -339,44 +338,22 @@ function transformCallExpression(
   return false;
 }
 
-function transformJestUtils(source: SourceFile): boolean {
-  let hasUtils = false;
+function transformTypeReference(typeRef: TypeReferenceNode): string {
+  const typeName = typeRef.getTypeName();
+  const namespace = typeName.getFirstChild()?.getText();
+  const typeProp = typeName.getLastChild()?.getText() as string;
 
-  source.forEachDescendant((node) => {
-    switch (node.getKind()) {
-      case SyntaxKind.CallExpression:
-        hasUtils = transformCallExpression(node as CallExpression, source);
-        break;
-    }
-  });
+  if (namespace === "jest" && typeProp in JEST_TYPES) {
+    typeName.replaceWithText(typeProp);
 
-  return hasUtils;
-}
-
-function transformJestTypes(source: SourceFile): string[] {
-  const neededTypes = [];
-  const typeRefs = source.getDescendantsOfKind(SyntaxKind.TypeReference);
-
-  for (const typeRef of typeRefs) {
-    const typeName = typeRef.getTypeName();
-    const namespace = typeName.getFirstChild();
-    const typeProp = typeName.getLastChild();
-
-    if (namespace?.getText() === "jest" && typeProp) {
-      if (typeProp.getText() in JEST_TYPES) {
-        const typeName = typeProp.getText();
-
-        typeProp.replaceWithText(typeName);
-        neededTypes.push(typeName);
-      } else {
-        typeRef
-          .getFirstAncestorByKind(SyntaxKind.VariableDeclaration)
-          ?.removeType();
-      }
-    }
+    return typeProp;
   }
 
-  return neededTypes;
+  typeRef
+    .getFirstAncestorByKind(SyntaxKind.VariableDeclaration)
+    ?.removeType();
+
+  return '';
 }
 
 function removeJestImports(source: SourceFile) {
@@ -405,8 +382,23 @@ export function transformJestTestToVitest(
     });
     const source = project.createSourceFile(file.path, file.content);
 
-    const hasUtils = transformJestUtils(source);
-    const neededTypes = transformJestTypes(source);
+    let hasUtils = false;
+    const neededTypes: string[] = [];
+
+    source.forEachDescendant((node) => {
+      switch (node.getKind()) {
+        case SyntaxKind.CallExpression:
+          hasUtils = transformCallExpression(node as CallExpression, source);
+          break;
+
+        case SyntaxKind.TypeReference: {
+          const jestTypes = transformTypeReference(node as TypeReferenceNode);
+          if (jestTypes) {
+            neededTypes.push(jestTypes);
+          }
+        }
+      }
+    });
 
     const imports = hasUtils || neededTypes.length ? ["vi"] : [];
 

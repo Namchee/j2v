@@ -293,4 +293,25 @@ test('example test that may take longer', async () => {
     expect(transformed[0]?.content).toContain('vi.useRealTimers();');
     expect(transformed[0]?.content).toContain('vi.advanceTimersToNextTimer().advanceTimersToNextTimer();');
   });
+
+  it("should transform jest.Mock type", () => {
+    const path = "some/random/path.ts";
+    const code = `import {jest} from '@jest/globals';
+
+const sumRecursively: jest.Mock<(value: number) => number> = jest.fn(value => {
+  if (value === 0) {
+    return 0;
+  } else {
+    return value + fn(value - 1);
+  }
+});`;
+
+    const transformed = transformJestTestToVitest([{
+      path,
+      content: code,
+    }]);
+
+    expect(transformed[0]?.content).not.toContain('@jest/globals');
+    expect(transformed[0]?.content).toContain('import { type Mock } from \'vitest\';');
+  });
 });
