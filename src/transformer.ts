@@ -277,12 +277,7 @@ const JEST_UTILS: Record<string, VitestUtil> = {
 };
 
 // List of commonly used (and mappable) Jest types
-const JEST_TYPES = {
-  Mock: "Mock",
-  Mocked: "Mocked",
-  Replaced: "Replaced",
-  Spied: "Spied",
-};
+const JEST_TYPES = ["Mock", "Mocked", "Replaced", "Spied", "Mock", "MockContext", "MockInstance", "MockedObject", "MockedFunction", "MockedClass"];
 
 function transformCallExpression(
   callExpr: CallExpression,
@@ -328,7 +323,7 @@ function transformTypeReference(typeRef: TypeReferenceNode): string {
   const namespace = typeName.getFirstChild()?.getText();
   const typeProp = typeName.getLastChild()?.getText() as string;
 
-  if (namespace === "jest" && typeProp in JEST_TYPES) {
+  if (namespace === "jest" && JEST_TYPES.includes(typeProp)) {
     typeName.replaceWithText(typeProp);
 
     return typeProp;
