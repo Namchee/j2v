@@ -4,6 +4,7 @@ import {
   Project,
   QuoteKind,
   type SourceFile,
+  type StringLiteral,
   SyntaxKind,
   type TypeReferenceNode,
 } from "ts-morph";
@@ -349,6 +350,16 @@ function transformTypeReference(typeRef: TypeReferenceNode): string {
   return "";
 }
 
+function transformStringLiteral(node: StringLiteral) {
+  const workerIdPattern = /(['"`])JEST_WORKER_ID\1/;
+  const match = node.getText().match(workerIdPattern);
+
+  if (match) {
+    const quote = match[1];
+    node.replaceWithText(`${quote}VITEST_POOL_ID${quote}`);
+  }
+}
+
 function removeJestImports(source: SourceFile) {
   const importDec = source.getImportDeclaration(
     (dec) => dec.getModuleSpecifierValue() === "@jest/globals",
@@ -411,9 +422,7 @@ export function transformJestTestToVitest(
         }
 
         case SyntaxKind.StringLiteral: {
-          if (node.getText() === "'JEST_WORKER_ID'") {
-            node.replaceWithText("'VITEST_POOL_ID'");
-          }
+          transformStringLiteral(node as StringLiteral);
 
           break;
         }
