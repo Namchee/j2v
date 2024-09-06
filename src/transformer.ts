@@ -181,8 +181,12 @@ const JEST_UTILS: Record<string, VitestUtil> = {
     const factoryArgs = args[1];
 
     if (factoryArgs) {
-      const factoryFn = factoryArgs.asKind(SyntaxKind.ArrowFunction) || factoryArgs.asKind(SyntaxKind.FunctionExpression);
-      const isNotPrimitive = factoryFn?.getChildrenOfKind(SyntaxKind.Block).length || factoryFn?.getChildrenOfKind(SyntaxKind.ParenthesizedExpression).length;
+      const factoryFn =
+        factoryArgs.asKind(SyntaxKind.ArrowFunction) ||
+        factoryArgs.asKind(SyntaxKind.FunctionExpression);
+      const isNotPrimitive =
+        factoryFn?.getChildrenOfKind(SyntaxKind.Block).length ||
+        factoryFn?.getChildrenOfKind(SyntaxKind.ParenthesizedExpression).length;
 
       if (isNotPrimitive) {
         return;
@@ -277,7 +281,18 @@ const JEST_UTILS: Record<string, VitestUtil> = {
 };
 
 // List of commonly used (and mappable) Jest types
-const JEST_TYPES = ["Mock", "Mocked", "Replaced", "Spied", "Mock", "MockContext", "MockInstance", "MockedObject", "MockedFunction", "MockedClass"];
+const JEST_TYPES = [
+  "Mock",
+  "Mocked",
+  "Replaced",
+  "Spied",
+  "Mock",
+  "MockContext",
+  "MockInstance",
+  "MockedObject",
+  "MockedFunction",
+  "MockedClass",
+];
 
 function transformCallExpression(
   callExpr: CallExpression,
@@ -329,11 +344,9 @@ function transformTypeReference(typeRef: TypeReferenceNode): string {
     return typeProp;
   }
 
-  typeRef
-    .getFirstAncestorByKind(SyntaxKind.VariableDeclaration)
-    ?.removeType();
+  typeRef.getFirstAncestorByKind(SyntaxKind.VariableDeclaration)?.removeType();
 
-  return '';
+  return "";
 }
 
 function removeJestImports(source: SourceFile) {
@@ -370,13 +383,6 @@ export function transformJestTestToVitest(
     source.forEachDescendant((node) => {
       switch (node.getKind()) {
         case SyntaxKind.CallExpression: {
-          const callExpr = node as CallExpression;
-          const identifier = callExpr.getChildrenOfKind(SyntaxKind.Identifier);
-
-          if (identifier[0] && JEST_GLOBALS.includes(identifier[0].getText())) {
-            globals.push(identifier[0].getText());
-          }
-
           hasUtils = transformCallExpression(node as CallExpression, source);
           break;
         }
@@ -391,9 +397,22 @@ export function transformJestTestToVitest(
         }
 
         case SyntaxKind.Identifier: {
+          const text = node.getText();
+
+          if (JEST_GLOBALS.includes(text)) {
+            globals.push(text);
+          }
           // https://vitest.dev/guide/migration.html#envs
-          if (node.getText() === 'JEST_WORKER_ID') {
-            node.replaceWithText('VITEST_POOL_ID');
+          if (node.getText() === "JEST_WORKER_ID") {
+            node.replaceWithText("VITEST_POOL_ID");
+          }
+
+          break;
+        }
+
+        case SyntaxKind.StringLiteral: {
+          if (node.getText() === "'JEST_WORKER_ID'") {
+            node.replaceWithText("'VITEST_POOL_ID'");
           }
 
           break;

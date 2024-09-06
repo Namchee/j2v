@@ -334,4 +334,24 @@ const sumRecursively: jest.Mock<(value: number) => number> = jest.fn(value => {
 
     expect(transformed[0]?.content).toContain('process.env.VITEST_POOL_ID');
   });
-});
+
+  it("should replace literal JEST_WORKER_ID with VITEST_POOL_ID", () => {
+    const path = "some/random/path.ts";
+    const code = `it("should log the JEST_WORKER_ID", () => {
+  const workerId = process.env['JEST_WORKER_ID'];
+
+  if (workerId === "1") {
+    expect(true).toBe(true); // Example assertion for worker 1
+  } else {
+    expect(true).toBe(false); // Example assertion for any other worker
+  }
+});`;
+
+    const transformed = transformJestTestToVitest([{
+      path,
+      content: code,
+    }]);
+
+    expect(transformed[0]?.content).toContain("process.env['VITEST_POOL_ID']");
+  });
+ });
