@@ -17,16 +17,17 @@ import type { TestFile } from "./test";
 type VitestUtil = string | ((expr: CallExpression, source: SourceFile) => void);
 
 // List of common globals used in Jest
-const JEST_GLOBALS = [
-  "afterAll",
-  "afterEach",
-  "beforeAll",
-  "beforeEach",
-  "describe",
-  "test",
-  "it",
-  "expect",
-];
+const JEST_GLOBALS = {
+  afterAll: "afterAll",
+  afterEach: "afterEach",
+  beforeAll: "beforeAll",
+  beforeEach: "beforeEach",
+  describe: "describe",
+  test: "test",
+  it: "it",
+  expect: "expect",
+};
+
 const JEST_UTILS: Record<string, VitestUtil> = {
   useFakeTimers: (expr: CallExpression, source: SourceFile) => {
     expr.setExpression("vi.useFakeTimers");
@@ -410,7 +411,7 @@ export function transformJestTestToVitest(
         case SyntaxKind.Identifier: {
           const text = node.getText();
 
-          if (JEST_GLOBALS.includes(text)) {
+          if (text in JEST_GLOBALS) {
             globals.push(text);
           }
           // https://vitest.dev/guide/migration.html#envs
