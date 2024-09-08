@@ -10,25 +10,45 @@ import {
 } from "ts-morph";
 
 import { Logger } from "./logger";
+
+import type { UserConfig } from "vitest/config";
 import type { TestFile } from "./test";
 
 // If the value is a string, it will just re-map to `vi.<name>`
 // If the value is a function, then the function will handle all the transformation
-type VitestUtil = string | ((expr: CallExpression, source: SourceFile) => void);
+type Replacer = string | ((expr: CallExpression, source: SourceFile) => void);
 
 // List of common globals used in Jest
-const JEST_GLOBALS = {
+const JEST_GLOBALS: Record<string, Replacer> = {
   afterAll: "afterAll",
   afterEach: "afterEach",
-  beforeAll: "beforeAll",
-  beforeEach: "beforeEach",
+  beforeAll: (expr: CallExpression) => {
+    const fn = expr.getChildrenOfKind(SyntaxKind.ArrowFunction) || expr.getChildrenOfKind(SyntaxKind.FunctionExpression);
+    if (!fn) {
+      Logger.warning(`j2v cannot transform \`jest.beforeAll\` on line ${expr.getStartLineNumber(true)} correctly. Please wrap the content of this expression in a block manually.`);
+
+      return;
+    }
+
+    console.log(fn[0]);
+  },
+  beforeEach: (expr: CallExpression) => {
+    const fn = expr.getChildrenOfKind(SyntaxKind.ArrowFunction) || expr.getChildrenOfKind(SyntaxKind.FunctionExpression);
+    if (!fn) {
+      Logger.warning(`j2v cannot transform \`jest.beforeEach\` on line ${expr.getStartLineNumber(true)} correctly. Please wrap the content of this expression in a block manually.`);
+
+      return;
+    }
+
+    console.log(fn[0]);
+  },
   describe: "describe",
   test: "test",
   it: "it",
   expect: "expect",
 };
 
-const JEST_UTILS: Record<string, VitestUtil> = {
+const JEST_UTILS: Record<string, Replacer> = {
   useFakeTimers: (expr: CallExpression, source: SourceFile) => {
     expr.setExpression("vi.useFakeTimers");
 
@@ -299,13 +319,30 @@ const JEST_TYPES = [
 function transformCallExpression(
   callExpr: CallExpression,
   source: SourceFile,
-): boolean {
+): string | undefined {
+  const identifierCheck = callExpr.getChildrenOfKind(SyntaxKind.Identifier);
+  if (identifierCheck[0] && identifierCheck[0].getText() in JEST_GLOBALS) {
+    const mappingFn = JEST_GLOBALS[identifierCheck[0].getText()];
+
+    if (typeof mappingFn === "function") {
+      mappingFn(callExpr, source);
+    } else {
+      callExpr.setExpression(mappingFn as string);
+    }
+
+    return identifierCheck[0].getText();
+  }
+
+  return transformJestAPI(callExpr, source);
+}
+
+function transformJestAPI(callExpr: CallExpression, source: SourceFile): string | undefined {
   const propertyExpr = callExpr.getFirstChildIfKind(
     SyntaxKind.PropertyAccessExpression,
   );
 
   if (!propertyExpr) {
-    return false;
+    return;
   }
 
   const callChildren = propertyExpr.getChildren();
@@ -313,7 +350,7 @@ function transformCallExpression(
   const method = callChildren[2];
 
   if (sourceObject?.getText() !== "jest" || !method) {
-    return false;
+    return;
   }
 
   if (JEST_UTILS[method.getText()]) {
@@ -325,14 +362,12 @@ function transformCallExpression(
       callExpr.setExpression(`vi.${mapping}`);
     }
 
-    return true;
+    return "vi";
   }
 
   Logger.warning(
     `j2v cannot transform \`${propertyExpr.getText()}\` on line ${callExpr.getStartLineNumber(true)} in \`${source.getBaseName()}\` correctly. You might want to transform it to Vitest equivalent manually`,
   );
-
-  return false;
 }
 
 function transformTypeReference(typeRef: TypeReferenceNode): string {
@@ -373,7 +408,7 @@ function removeJestImports(source: SourceFile) {
 
 export function transformJestTestToVitest(
   testFiles: TestFile[],
-  useGlobals = false,
+  config: UserConfig["test"],
 ): TestFile[] {
   const project = new Project({
     manipulationSettings: {
@@ -388,32 +423,31 @@ export function transformJestTestToVitest(
 
     const source = project.createSourceFile(file.path, file.content);
 
-    let hasUtils = false;
-    const neededTypes: string[] = [];
-    const globals: string[] = [];
+    const types: string[] = [];
+    const api: string[] = [];
 
     source.forEachDescendant((node) => {
       switch (node.getKind()) {
         case SyntaxKind.CallExpression: {
-          hasUtils = transformCallExpression(node as CallExpression, source);
+          const apiCall = transformCallExpression(node as CallExpression, source);
+
+          if (apiCall) {
+            api.push(apiCall);
+          }
+
           break;
         }
 
         case SyntaxKind.TypeReference: {
           const jestTypes = transformTypeReference(node as TypeReferenceNode);
           if (jestTypes) {
-            neededTypes.push(jestTypes);
+            types.push(jestTypes);
           }
 
           break;
         }
 
         case SyntaxKind.Identifier: {
-          const text = node.getText();
-
-          if (text in JEST_GLOBALS) {
-            globals.push(text);
-          }
           // https://vitest.dev/guide/migration.html#envs
           if (node.getText() === "JEST_WORKER_ID") {
             node.replaceWithText("VITEST_POOL_ID");
@@ -430,22 +464,16 @@ export function transformJestTestToVitest(
       }
     });
 
-    const imports = hasUtils || neededTypes.length ? ["vi"] : [];
-
-    if (!useGlobals) {
-      imports.push(...globals);
-    }
-
-    if (imports.length) {
+    if (!config?.globals && api.length) {
       source.addImportDeclaration({
-        namedImports: imports,
+        namedImports: [...new Set(api)],
         moduleSpecifier: "vitest",
       });
     }
 
-    if (neededTypes.length) {
+    if (types.length) {
       source.addImportDeclaration({
-        namedImports: neededTypes.map((importName) => ({
+        namedImports: types.map((importName) => ({
           name: importName,
           isTypeOnly: true,
         })),
