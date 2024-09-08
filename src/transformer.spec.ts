@@ -21,9 +21,29 @@ describe("transformJestTestToVitest", () => {
     const transformed = transformJestTestToVitest([{
       path,
       content: code,
-    }]);
+    }], {});
 
     expect(transformed[0]?.content).toContain(`import { describe, it, expect } from 'vitest';`);
+  });
+
+  it("should not import vitest utilities when `globals` is true", () => {
+    const path = "some/random/path.ts";
+    const code = `describe('sample test', () => {
+  it('return 2', () => {
+    const result = 1 + 1;
+
+    expect(result).toBe(2);
+  });
+});`;
+
+    const transformed = transformJestTestToVitest([{
+      path,
+      content: code,
+    }], {
+      globals: true,
+    });
+
+    expect(transformed[0]?.content).not.toContain(`import { describe, it, expect } from 'vitest';`);
   });
 
   it("should not wrap jest.mock factory with default if the return type is an object", () => {
@@ -37,7 +57,7 @@ jest.mock('./api', () => ({
     const transformed = transformJestTestToVitest([{
       path,
       content: code,
-    }]);
+    }], {});
 
     expect(transformed[0]?.content).not.toContain('default: {');
   });
@@ -51,7 +71,7 @@ jest.mock('./api', () => 5);`;
     const transformed = transformJestTestToVitest([{
       path,
       content: code,
-    }]);
+    }], {});
 
     expect(transformed[0]?.content).toContain('default: 5');
   });
@@ -65,7 +85,7 @@ jest.mock('./api', () => function() { return 5; });`;
     const transformed = transformJestTestToVitest([{
       path,
       content: code,
-    }]);
+    }], {});
 
     expect(transformed[0]?.content).toContain('default: function() { return 5; }');
   });
@@ -99,7 +119,7 @@ jest.mock('./api', () => function() { return 5; });`;
     const transformed = transformJestTestToVitest([{
       path,
       content: code,
-    }]);
+    }], {});
 
     expect(transformed[0]?.content).toContain('vi.useFakeTimers');
     expect(transformed[0]?.content).toContain('shouldAdvanceTime: true');
@@ -128,7 +148,7 @@ test('example test using jest.mocked', async () => {
     const transformed = transformJestTestToVitest([{
       path,
       content: code,
-    }]);
+    }], {});
 
     expect(transformed[0]?.content).toContain('vi.mocked(fetchData);');
   });
@@ -153,7 +173,7 @@ test('example test using jest.mocked', async () => {
     const transformed = transformJestTestToVitest([{
       path,
       content: code,
-    }]);
+    }], {});
 
     expect(transformed[0]?.content).toContain('vi.mocked(fetchData, true);');
   });
@@ -174,7 +194,7 @@ test('example test using jest.mocked', async () => {
     const transformed = transformJestTestToVitest([{
       path,
       content: code,
-    }]);
+    }], {});
 
     expect(transformed[0]?.content).toContain(`vi.mock('../myModule', async () => {`);
     expect(transformed[0]?.content).toContain('await vi.importActual');
@@ -194,7 +214,7 @@ test('example test using jest.mocked', async () => {
     const transformed = transformJestTestToVitest([{
       path,
       content: code,
-    }]);
+    }], {});
 
     expect(transformed[0]?.content).toContain(`test('sample test', async () => {`);
     expect(transformed[0]?.content).toContain('const mathMock = await vi.importMock(');
@@ -213,7 +233,7 @@ test('example test that may take longer', async () => {
     const transformed = transformJestTestToVitest([{
       path,
       content: code,
-    }]);
+    }], {});
 
     expect(transformed[0]?.content).toContain('vi.setConfig({ testTimeout: 10000 });');
   });
@@ -249,7 +269,7 @@ test('example test that may take longer', async () => {
     const transformed = transformJestTestToVitest([{
       path,
       content: code,
-    }]);
+    }], {});
 
     expect(transformed[0]?.content).toContain('vi.useFakeTimers();');
     expect(transformed[0]?.content).toContain('vi.useRealTimers();');
@@ -287,7 +307,7 @@ test('example test that may take longer', async () => {
     const transformed = transformJestTestToVitest([{
       path,
       content: code,
-    }]);
+    }], {});
 
     expect(transformed[0]?.content).toContain('vi.useFakeTimers();');
     expect(transformed[0]?.content).toContain('vi.useRealTimers();');
@@ -309,7 +329,7 @@ const sumRecursively: jest.Mock<(value: number) => number> = jest.fn(value => {
     const transformed = transformJestTestToVitest([{
       path,
       content: code,
-    }]);
+    }], {});
 
     expect(transformed[0]?.content).not.toContain('@jest/globals');
     expect(transformed[0]?.content).toContain('import { type Mock } from \'vitest\';');
@@ -330,7 +350,7 @@ const sumRecursively: jest.Mock<(value: number) => number> = jest.fn(value => {
     const transformed = transformJestTestToVitest([{
       path,
       content: code,
-    }]);
+    }], {});
 
     expect(transformed[0]?.content).toContain('process.env.VITEST_POOL_ID');
   });
@@ -350,7 +370,7 @@ const sumRecursively: jest.Mock<(value: number) => number> = jest.fn(value => {
     const transformed = transformJestTestToVitest([{
       path,
       content: code,
-    }]);
+    }], {});
 
     expect(transformed[0]?.content).toContain("process.env['VITEST_POOL_ID']");
   });
@@ -370,7 +390,7 @@ const sumRecursively: jest.Mock<(value: number) => number> = jest.fn(value => {
     const transformed = transformJestTestToVitest([{
       path,
       content: code,
-    }]);
+    }], {});
 
     expect(transformed[0]?.content).toContain('process.env["VITEST_POOL_ID"]');
   });
