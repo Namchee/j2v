@@ -46,6 +46,18 @@ describe("transformJestTestToVitest", () => {
     expect(transformed[0]?.content).not.toContain(`import { describe, it, expect } from 'vitest';`);
   });
 
+  it("should convert beforeEach in a block", () => {
+    const path = "some/random/path.ts";
+    const code = "beforeEach(() => setActivePinia(createTestingPinia()));";
+
+    const transformed = transformJestTestToVitest([{
+      path,
+      content: code,
+    }], {});
+
+    console.log(transformed[0]?.content);
+  });
+
   it("should not wrap jest.mock factory with default if the return type is an object", () => {
     const path = "some/random/path.ts";
     const code = `import api from './api';

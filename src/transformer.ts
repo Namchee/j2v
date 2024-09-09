@@ -20,27 +20,61 @@ type Replacer = string | ((expr: CallExpression, source: SourceFile) => void);
 
 // List of common globals used in Jest
 const JEST_GLOBALS: Record<string, Replacer> = {
-  afterAll: "afterAll",
-  afterEach: "afterEach",
-  beforeAll: (expr: CallExpression) => {
-    const fn = expr.getChildrenOfKind(SyntaxKind.ArrowFunction) || expr.getChildrenOfKind(SyntaxKind.FunctionExpression);
-    if (!fn) {
-      Logger.warning(`j2v cannot transform \`jest.beforeAll\` on line ${expr.getStartLineNumber(true)} correctly. Please wrap the content of this expression in a block manually.`);
+  afterAll: (expr: CallExpression) => {
+    const arg = expr.getArguments()[0];
 
-      return;
+    if (arg?.isKind(SyntaxKind.ArrowFunction)) {
+      const arrowFn = arg.asKind(SyntaxKind.ArrowFunction);
+      const hasBlock = arrowFn?.getChildrenOfKind(SyntaxKind.Block);
+
+      if (!hasBlock) {
+        const body = arrowFn?.getBody();
+
+        arrowFn?.setBodyText(`{ ${body?.getText()}; }`);
+      }
     }
+  },
+  afterEach: (expr: CallExpression) => {
+    const arg = expr.getArguments()[0];
 
-    console.log(fn[0]);
+    if (arg?.isKind(SyntaxKind.ArrowFunction)) {
+      const arrowFn = arg.asKind(SyntaxKind.ArrowFunction);
+      const hasBlock = arrowFn?.getChildrenOfKind(SyntaxKind.Block);
+
+      if (!hasBlock) {
+        const body = arrowFn?.getBody();
+
+        arrowFn?.setBodyText(`{ ${body?.getText()}; }`);
+      }
+    }
+  },
+  beforeAll: (expr: CallExpression) => {
+    const arg = expr.getArguments()[0];
+
+    if (arg?.isKind(SyntaxKind.ArrowFunction)) {
+      const arrowFn = arg.asKind(SyntaxKind.ArrowFunction);
+      const hasBlock = arrowFn?.getChildrenOfKind(SyntaxKind.Block);
+
+      if (!hasBlock) {
+        const body = arrowFn?.getBody();
+
+        arrowFn?.setBodyText(`{ ${body?.getText()}; }`);
+      }
+    }
   },
   beforeEach: (expr: CallExpression) => {
-    const fn = expr.getChildrenOfKind(SyntaxKind.ArrowFunction) || expr.getChildrenOfKind(SyntaxKind.FunctionExpression);
-    if (!fn) {
-      Logger.warning(`j2v cannot transform \`jest.beforeEach\` on line ${expr.getStartLineNumber(true)} correctly. Please wrap the content of this expression in a block manually.`);
+    const arg = expr.getArguments()[0];
 
-      return;
+    if (arg?.isKind(SyntaxKind.ArrowFunction)) {
+      const arrowFn = arg.asKind(SyntaxKind.ArrowFunction);
+      const hasBlock = arrowFn?.getChildrenOfKind(SyntaxKind.Block);
+
+      if (!hasBlock) {
+        const body = arrowFn?.getBody();
+
+        arrowFn?.setBodyText(`{ ${body?.getText()}; }`);
+      }
     }
-
-    console.log(fn[0]);
   },
   describe: "describe",
   test: "test",
