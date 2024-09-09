@@ -77,8 +77,21 @@ const JEST_GLOBALS: Record<string, Replacer> = {
     }
   },
   describe: "describe",
-  test: "test",
-  it: "it",
+  test: (expr: CallExpression) => {
+    const actualTest = expr.getArguments()[1]?.asKind(SyntaxKind.ArrowFunction);
+    if (actualTest?.getParameters().length === 0) {
+      return;
+    }
+  },
+  it: (expr: CallExpression) => {
+    const actualTest = expr.getArguments()[1]?.asKind(SyntaxKind.ArrowFunction);
+    const params = actualTest?.getParameters();
+    if (params?.length === 0) {
+      return;
+    }
+
+    const identifier = params[0];
+  },
   expect: "expect",
 };
 
