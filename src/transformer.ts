@@ -25,12 +25,12 @@ const JEST_GLOBALS: Record<string, Replacer> = {
 
     if (arg?.isKind(SyntaxKind.ArrowFunction)) {
       const arrowFn = arg.asKind(SyntaxKind.ArrowFunction);
-      const hasBlock = arrowFn?.getChildrenOfKind(SyntaxKind.Block);
+      if (arrowFn && !arrowFn.getBody().isKind(SyntaxKind.Block)) {
+        const body = arrowFn.getBody().getText();
 
-      if (!hasBlock) {
-        const body = arrowFn?.getBody();
-
-        arrowFn?.setBodyText(`{ ${body?.getText()}; }`);
+        arrowFn.replaceWithText(`() => {
+  ${body};
+}`);
       }
     }
   },
@@ -39,12 +39,12 @@ const JEST_GLOBALS: Record<string, Replacer> = {
 
     if (arg?.isKind(SyntaxKind.ArrowFunction)) {
       const arrowFn = arg.asKind(SyntaxKind.ArrowFunction);
-      const hasBlock = arrowFn?.getChildrenOfKind(SyntaxKind.Block);
+      if (arrowFn && !arrowFn.getBody().isKind(SyntaxKind.Block)) {
+        const body = arrowFn.getBody().getText();
 
-      if (!hasBlock) {
-        const body = arrowFn?.getBody();
-
-        arrowFn?.setBodyText(`{ ${body?.getText()}; }`);
+        arrowFn.replaceWithText(`() => {
+  ${body};
+}`);
       }
     }
   },
@@ -53,12 +53,12 @@ const JEST_GLOBALS: Record<string, Replacer> = {
 
     if (arg?.isKind(SyntaxKind.ArrowFunction)) {
       const arrowFn = arg.asKind(SyntaxKind.ArrowFunction);
-      const hasBlock = arrowFn?.getChildrenOfKind(SyntaxKind.Block);
+      if (arrowFn && !arrowFn.getBody().isKind(SyntaxKind.Block)) {
+        const body = arrowFn.getBody().getText();
 
-      if (!hasBlock) {
-        const body = arrowFn?.getBody();
-
-        arrowFn?.setBodyText(`{ ${body?.getText()}; }`);
+        arrowFn.replaceWithText(`() => {
+  ${body};
+}`);
       }
     }
   },
@@ -67,18 +67,23 @@ const JEST_GLOBALS: Record<string, Replacer> = {
 
     if (arg?.isKind(SyntaxKind.ArrowFunction)) {
       const arrowFn = arg.asKind(SyntaxKind.ArrowFunction);
-      const hasBlock = arrowFn?.getChildrenOfKind(SyntaxKind.Block);
+      if (arrowFn && !arrowFn.getBody().isKind(SyntaxKind.Block)) {
+        const body = arrowFn.getBody().getText();
 
-      if (!hasBlock) {
-        const body = arrowFn?.getBody();
-
-        arrowFn?.setBodyText(`{ ${body?.getText()}; }`);
+        arrowFn.replaceWithText(`() => {
+  ${body};
+}`);
       }
     }
   },
   describe: "describe",
   test: (expr: CallExpression) => {
-    const actualTest = expr.getArguments()[1]?.asKind(SyntaxKind.ArrowFunction);
+    const fn = expr.getArguments()[1];
+    if (!fn?.isKind(SyntaxKind.ArrowFunction)) {
+      return;
+    }
+
+    const actualTest = fn.asKind(SyntaxKind.ArrowFunction);
     const params = actualTest?.getParameters();
     if (!params || params.length === 0) {
       return;
@@ -91,7 +96,12 @@ const JEST_GLOBALS: Record<string, Replacer> = {
     actualTest?.getParameter(identifier)?.remove();
   },
   it: (expr: CallExpression) => {
-    const actualTest = expr.getArguments()[1]?.asKind(SyntaxKind.ArrowFunction);
+    const fn = expr.getArguments()[1];
+    if (!fn?.isKind(SyntaxKind.ArrowFunction)) {
+      return;
+    }
+
+    const actualTest = fn.asKind(SyntaxKind.ArrowFunction);
     const params = actualTest?.getParameters();
     if (!params || params.length === 0) {
       return;

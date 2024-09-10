@@ -46,7 +46,7 @@ describe("transformJestTestToVitest", () => {
     expect(transformed[0]?.content).not.toContain(`import { describe, it, expect } from 'vitest';`);
   });
 
-  it("should convert beforeEach in a block", () => {
+  it("should wrap beforeEach in a block if there is no blocks", () => {
     const path = "some/random/path.ts";
     const code = "beforeEach(() => setActivePinia(createTestingPinia()));";
 
@@ -55,7 +55,43 @@ describe("transformJestTestToVitest", () => {
       content: code,
     }], {});
 
-    console.log(transformed[0]?.content);
+    expect(transformed[0]?.content).toContain('beforeEach(() => {');
+  });
+
+  it("should wrap afterEach in a block if there is no blocks", () => {
+    const path = "some/random/path.ts";
+    const code = "afterEach(() => setActivePinia(createTestingPinia()));";
+
+    const transformed = transformJestTestToVitest([{
+      path,
+      content: code,
+    }], {});
+
+    expect(transformed[0]?.content).toContain('afterEach(() => {');
+  });
+
+  it("should wrap beforeAll in a block if there is no blocks", () => {
+    const path = "some/random/path.ts";
+    const code = "beforeAll(() => setActivePinia(createTestingPinia()));";
+
+    const transformed = transformJestTestToVitest([{
+      path,
+      content: code,
+    }], {});
+
+    expect(transformed[0]?.content).toContain('beforeAll(() => {');
+  });
+
+  it("should wrap afterAll in a block if there is no blocks", () => {
+    const path = "some/random/path.ts";
+    const code = "afterAll(() => setActivePinia(createTestingPinia()));";
+
+    const transformed = transformJestTestToVitest([{
+      path,
+      content: code,
+    }], {});
+
+    expect(transformed[0]?.content).toContain('afterAll(() => {');
   });
 
   it("should not wrap jest.mock factory with default if the return type is an object", () => {
