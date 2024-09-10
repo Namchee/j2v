@@ -79,18 +79,29 @@ const JEST_GLOBALS: Record<string, Replacer> = {
   describe: "describe",
   test: (expr: CallExpression) => {
     const actualTest = expr.getArguments()[1]?.asKind(SyntaxKind.ArrowFunction);
-    if (actualTest?.getParameters().length === 0) {
+    const params = actualTest?.getParameters();
+    if (!params || params.length === 0) {
       return;
     }
+
+    const body = actualTest?.getBody().getText();
+    const identifier = params[0]?.getText() as string;
+
+    actualTest?.replaceWithText(`() => new Promise(${identifier} => ${body} )`);
+    actualTest?.getParameter(identifier)?.remove();
   },
   it: (expr: CallExpression) => {
     const actualTest = expr.getArguments()[1]?.asKind(SyntaxKind.ArrowFunction);
     const params = actualTest?.getParameters();
-    if (params?.length === 0) {
+    if (!params || params.length === 0) {
       return;
     }
 
-    const identifier = params[0];
+    const body = actualTest?.getBody().getText();
+    const identifier = params[0]?.getText() as string;
+
+    actualTest?.replaceWithText(`() => new Promise(${identifier} => ${body} )`);
+    actualTest?.getParameter(identifier)?.remove();
   },
   expect: "expect",
 };

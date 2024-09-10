@@ -406,4 +406,40 @@ const sumRecursively: jest.Mock<(value: number) => number> = jest.fn(value => {
 
     expect(transformed[0]?.content).toContain('process.env["VITEST_POOL_ID"]');
   });
+
+  it("should wrap callback in a lifecycle hook with Promise", () => {
+    const path = "some/random/path.ts";
+    const code = `const add = require('./add');
+
+it('adds 1 + 2 to equal 3', (done) => {
+  const result = add(1, 2);
+  expect(result).toBe(3);
+  done();
+});`;
+
+    const transformed = transformJestTestToVitest([{
+      path,
+      content: code,
+    }], {});
+
+    expect(transformed[0]?.content).toContain('() => new Promise(done => {');
+  });
+
+  it("should wrap callback in a lifecycle hook with Promise, even though the parameter name is not 'done'", () => {
+    const path = "some/random/path.ts";
+    const code = `const add = require('./add');
+
+it('adds 1 + 2 to equal 3', (cb) => {
+  const result = add(1, 2);
+  expect(result).toBe(3);
+  cb();
+});`;
+
+    const transformed = transformJestTestToVitest([{
+      path,
+      content: code,
+    }], {});
+
+    expect(transformed[0]?.content).toContain('() => new Promise(cb => {');
+  });
  });
