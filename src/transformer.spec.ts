@@ -1,4 +1,4 @@
-import { beforeAll, describe, expect, it, } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 
 import { Logger } from "./logger";
 import { transformJestTestToVitest } from "./transformer";
@@ -18,12 +18,19 @@ describe("transformJestTestToVitest", () => {
   });
 });`;
 
-    const transformed = transformJestTestToVitest([{
-      path,
-      content: code,
-    }], {});
+    const transformed = transformJestTestToVitest(
+      [
+        {
+          path,
+          content: code,
+        },
+      ],
+      {},
+    );
 
-    expect(transformed[0]?.content).toContain(`import { describe, it, expect } from 'vitest';`);
+    expect(transformed[0]?.content).toContain(
+      `import { describe, it, expect } from 'vitest';`,
+    );
   });
 
   it("should not import vitest utilities when `globals` is true", () => {
@@ -36,62 +43,112 @@ describe("transformJestTestToVitest", () => {
   });
 });`;
 
-    const transformed = transformJestTestToVitest([{
-      path,
-      content: code,
-    }], {
-      globals: true,
-    });
+    const transformed = transformJestTestToVitest(
+      [
+        {
+          path,
+          content: code,
+        },
+      ],
+      {
+        globals: true,
+      },
+    );
 
-    expect(transformed[0]?.content).not.toContain(`import { describe, it, expect } from 'vitest';`);
+    expect(transformed[0]?.content).not.toContain(
+      `import { describe, it, expect } from 'vitest';`,
+    );
   });
 
   it("should wrap beforeEach in a block if there is no blocks", () => {
     const path = "some/random/path.ts";
     const code = "beforeEach(() => setActivePinia(createTestingPinia()));";
 
-    const transformed = transformJestTestToVitest([{
-      path,
-      content: code,
-    }], {});
+    const transformed = transformJestTestToVitest(
+      [
+        {
+          path,
+          content: code,
+        },
+      ],
+      {},
+    );
 
-    expect(transformed[0]?.content).toContain('beforeEach(() => {');
+    expect(transformed[0]?.content).toContain("beforeEach(() => {");
   });
 
   it("should wrap afterEach in a block if there is no blocks", () => {
     const path = "some/random/path.ts";
     const code = "afterEach(() => setActivePinia(createTestingPinia()));";
 
-    const transformed = transformJestTestToVitest([{
-      path,
-      content: code,
-    }], {});
+    const transformed = transformJestTestToVitest(
+      [
+        {
+          path,
+          content: code,
+        },
+      ],
+      {},
+    );
 
-    expect(transformed[0]?.content).toContain('afterEach(() => {');
+    expect(transformed[0]?.content).toContain("afterEach(() => {");
   });
 
   it("should wrap beforeAll in a block if there is no blocks", () => {
     const path = "some/random/path.ts";
     const code = "beforeAll(() => setActivePinia(createTestingPinia()));";
 
-    const transformed = transformJestTestToVitest([{
-      path,
-      content: code,
-    }], {});
+    const transformed = transformJestTestToVitest(
+      [
+        {
+          path,
+          content: code,
+        },
+      ],
+      {},
+    );
 
-    expect(transformed[0]?.content).toContain('beforeAll(() => {');
+    expect(transformed[0]?.content).toContain("beforeAll(() => {");
   });
 
   it("should wrap afterAll in a block if there is no blocks", () => {
     const path = "some/random/path.ts";
     const code = "afterAll(() => setActivePinia(createTestingPinia()));";
 
-    const transformed = transformJestTestToVitest([{
-      path,
-      content: code,
-    }], {});
+    const transformed = transformJestTestToVitest(
+      [
+        {
+          path,
+          content: code,
+        },
+      ],
+      {},
+    );
 
-    expect(transformed[0]?.content).toContain('afterAll(() => {');
+    expect(transformed[0]?.content).toContain("afterAll(() => {");
+  });
+
+  it("should not forget an inner block when wrapping lifecycle functions", () => {
+    const path = "some/random/path.ts";
+    const code = `import * as api from './api';
+
+beforeEach(() => jest.spyOn(api, 'sample').mockResolvedValue('mocked data'));
+`;
+
+    const transformed = transformJestTestToVitest(
+      [
+        {
+          path,
+          content: code,
+        },
+      ],
+      {},
+    );
+
+    expect(transformed[0]?.content).toContain(
+      "import { beforeEach, vi } from 'vitest';",
+    );
+    expect(transformed[0]?.content).toContain("beforeEach(() => {");
   });
 
   it("should not wrap jest.mock factory with default if the return type is an object", () => {
@@ -102,12 +159,17 @@ jest.mock('./api', () => ({
   fetchData: jest.fn().mockResolvedValue('mocked data'),
 }));`;
 
-    const transformed = transformJestTestToVitest([{
-      path,
-      content: code,
-    }], {});
+    const transformed = transformJestTestToVitest(
+      [
+        {
+          path,
+          content: code,
+        },
+      ],
+      {},
+    );
 
-    expect(transformed[0]?.content).not.toContain('default: {');
+    expect(transformed[0]?.content).not.toContain("default: {");
   });
 
   it("should wrap jest.mock factory with default if the return type is a primitive", () => {
@@ -116,12 +178,17 @@ jest.mock('./api', () => ({
 
 jest.mock('./api', () => 5);`;
 
-    const transformed = transformJestTestToVitest([{
-      path,
-      content: code,
-    }], {});
+    const transformed = transformJestTestToVitest(
+      [
+        {
+          path,
+          content: code,
+        },
+      ],
+      {},
+    );
 
-    expect(transformed[0]?.content).toContain('default: 5');
+    expect(transformed[0]?.content).toContain("default: 5");
   });
 
   it("should wrap jest.mock factory with default if the return type is a function", () => {
@@ -130,12 +197,19 @@ jest.mock('./api', () => 5);`;
 
 jest.mock('./api', () => function() { return 5; });`;
 
-    const transformed = transformJestTestToVitest([{
-      path,
-      content: code,
-    }], {});
+    const transformed = transformJestTestToVitest(
+      [
+        {
+          path,
+          content: code,
+        },
+      ],
+      {},
+    );
 
-    expect(transformed[0]?.content).toContain('default: function() { return 5; }');
+    expect(transformed[0]?.content).toContain(
+      "default: function() { return 5; }",
+    );
   });
 
   it("should transform useFakeTimers with arguments correctly", () => {
@@ -164,16 +238,21 @@ jest.mock('./api', () => function() { return 5; });`;
   jest.useRealTimers();
 });`;
 
-    const transformed = transformJestTestToVitest([{
-      path,
-      content: code,
-    }], {});
+    const transformed = transformJestTestToVitest(
+      [
+        {
+          path,
+          content: code,
+        },
+      ],
+      {},
+    );
 
-    expect(transformed[0]?.content).toContain('vi.useFakeTimers');
-    expect(transformed[0]?.content).toContain('shouldAdvanceTime: true');
-    expect(transformed[0]?.content).toContain('advanceTimeDelta: 5_000');
-    expect(transformed[0]?.content).toContain('loopLimit: 50');
-    expect(transformed[0]?.content).toContain('toFake');
+    expect(transformed[0]?.content).toContain("vi.useFakeTimers");
+    expect(transformed[0]?.content).toContain("shouldAdvanceTime: true");
+    expect(transformed[0]?.content).toContain("advanceTimeDelta: 5_000");
+    expect(transformed[0]?.content).toContain("loopLimit: 50");
+    expect(transformed[0]?.content).toContain("toFake");
   });
 
   it("should transform jest.mocked without arguments correctly", () => {
@@ -193,12 +272,17 @@ test('example test using jest.mocked', async () => {
   expect(mockedFetchData).toHaveBeenCalledTimes(1);
 });`;
 
-    const transformed = transformJestTestToVitest([{
-      path,
-      content: code,
-    }], {});
+    const transformed = transformJestTestToVitest(
+      [
+        {
+          path,
+          content: code,
+        },
+      ],
+      {},
+    );
 
-    expect(transformed[0]?.content).toContain('vi.mocked(fetchData);');
+    expect(transformed[0]?.content).toContain("vi.mocked(fetchData);");
   });
 
   it("should transform jest.mocked with arguments correctly", () => {
@@ -218,12 +302,17 @@ test('example test using jest.mocked', async () => {
   expect(mockedFetchData).toHaveBeenCalledTimes(1);
 });`;
 
-    const transformed = transformJestTestToVitest([{
-      path,
-      content: code,
-    }], {});
+    const transformed = transformJestTestToVitest(
+      [
+        {
+          path,
+          content: code,
+        },
+      ],
+      {},
+    );
 
-    expect(transformed[0]?.content).toContain('vi.mocked(fetchData, true);');
+    expect(transformed[0]?.content).toContain("vi.mocked(fetchData, true);");
   });
 
   it("should transform requireActual correctly", () => {
@@ -239,13 +328,20 @@ test('example test using jest.mocked', async () => {
   };
 });`;
 
-    const transformed = transformJestTestToVitest([{
-      path,
-      content: code,
-    }], {});
+    const transformed = transformJestTestToVitest(
+      [
+        {
+          path,
+          content: code,
+        },
+      ],
+      {},
+    );
 
-    expect(transformed[0]?.content).toContain(`vi.mock('../myModule', async () => {`);
-    expect(transformed[0]?.content).toContain('await vi.importActual');
+    expect(transformed[0]?.content).toContain(
+      `vi.mock('../myModule', async () => {`,
+    );
+    expect(transformed[0]?.content).toContain("await vi.importActual");
   });
 
   it("should transform requireMock correctly", () => {
@@ -259,13 +355,22 @@ test('example test using jest.mocked', async () => {
   expect(mathMock.add).toHaveBeenCalledWith(3, 5);
 });`;
 
-    const transformed = transformJestTestToVitest([{
-      path,
-      content: code,
-    }], {});
+    const transformed = transformJestTestToVitest(
+      [
+        {
+          path,
+          content: code,
+        },
+      ],
+      {},
+    );
 
-    expect(transformed[0]?.content).toContain(`test('sample test', async () => {`);
-    expect(transformed[0]?.content).toContain('const mathMock = await vi.importMock(');
+    expect(transformed[0]?.content).toContain(
+      `test('sample test', async () => {`,
+    );
+    expect(transformed[0]?.content).toContain(
+      "const mathMock = await vi.importMock(",
+    );
   });
 
   it("should transform setTimeout correctly", () => {
@@ -278,12 +383,19 @@ test('example test that may take longer', async () => {
   expect(result).toBe('done');
 });`;
 
-    const transformed = transformJestTestToVitest([{
-      path,
-      content: code,
-    }], {});
+    const transformed = transformJestTestToVitest(
+      [
+        {
+          path,
+          content: code,
+        },
+      ],
+      {},
+    );
 
-    expect(transformed[0]?.content).toContain('vi.setConfig({ testTimeout: 10000 });');
+    expect(transformed[0]?.content).toContain(
+      "vi.setConfig({ testTimeout: 10000 });",
+    );
   });
 
   it("should transform advanceTimersToNextTimer to Vitest", () => {
@@ -314,14 +426,19 @@ test('example test that may take longer', async () => {
   });
 });`;
 
-    const transformed = transformJestTestToVitest([{
-      path,
-      content: code,
-    }], {});
+    const transformed = transformJestTestToVitest(
+      [
+        {
+          path,
+          content: code,
+        },
+      ],
+      {},
+    );
 
-    expect(transformed[0]?.content).toContain('vi.useFakeTimers();');
-    expect(transformed[0]?.content).toContain('vi.useRealTimers();');
-    expect(transformed[0]?.content).toContain('vi.advanceTimersToNextTimer();');
+    expect(transformed[0]?.content).toContain("vi.useFakeTimers();");
+    expect(transformed[0]?.content).toContain("vi.useRealTimers();");
+    expect(transformed[0]?.content).toContain("vi.advanceTimersToNextTimer();");
   });
 
   it("should transform timer argument into multiple advanceTimersToNextTimer calls", () => {
@@ -352,14 +469,21 @@ test('example test that may take longer', async () => {
   });
 });`;
 
-    const transformed = transformJestTestToVitest([{
-      path,
-      content: code,
-    }], {});
+    const transformed = transformJestTestToVitest(
+      [
+        {
+          path,
+          content: code,
+        },
+      ],
+      {},
+    );
 
-    expect(transformed[0]?.content).toContain('vi.useFakeTimers();');
-    expect(transformed[0]?.content).toContain('vi.useRealTimers();');
-    expect(transformed[0]?.content).toContain('vi.advanceTimersToNextTimer().advanceTimersToNextTimer();');
+    expect(transformed[0]?.content).toContain("vi.useFakeTimers();");
+    expect(transformed[0]?.content).toContain("vi.useRealTimers();");
+    expect(transformed[0]?.content).toContain(
+      "vi.advanceTimersToNextTimer().advanceTimersToNextTimer();",
+    );
   });
 
   it("should transform jest.Mock type", () => {
@@ -374,13 +498,20 @@ const sumRecursively: jest.Mock<(value: number) => number> = jest.fn(value => {
   }
 });`;
 
-    const transformed = transformJestTestToVitest([{
-      path,
-      content: code,
-    }], {});
+    const transformed = transformJestTestToVitest(
+      [
+        {
+          path,
+          content: code,
+        },
+      ],
+      {},
+    );
 
-    expect(transformed[0]?.content).not.toContain('@jest/globals');
-    expect(transformed[0]?.content).toContain('import { type Mock } from \'vitest\';');
+    expect(transformed[0]?.content).not.toContain("@jest/globals");
+    expect(transformed[0]?.content).toContain(
+      "import { type Mock } from 'vitest';",
+    );
   });
 
   it("should replace JEST_WORKER_ID with VITEST_POOL_ID", () => {
@@ -395,12 +526,17 @@ const sumRecursively: jest.Mock<(value: number) => number> = jest.fn(value => {
   }
 });`;
 
-    const transformed = transformJestTestToVitest([{
-      path,
-      content: code,
-    }], {});
+    const transformed = transformJestTestToVitest(
+      [
+        {
+          path,
+          content: code,
+        },
+      ],
+      {},
+    );
 
-    expect(transformed[0]?.content).toContain('process.env.VITEST_POOL_ID');
+    expect(transformed[0]?.content).toContain("process.env.VITEST_POOL_ID");
   });
 
   it("should replace literal JEST_WORKER_ID with VITEST_POOL_ID", () => {
@@ -415,10 +551,15 @@ const sumRecursively: jest.Mock<(value: number) => number> = jest.fn(value => {
   }
 });`;
 
-    const transformed = transformJestTestToVitest([{
-      path,
-      content: code,
-    }], {});
+    const transformed = transformJestTestToVitest(
+      [
+        {
+          path,
+          content: code,
+        },
+      ],
+      {},
+    );
 
     expect(transformed[0]?.content).toContain("process.env['VITEST_POOL_ID']");
   });
@@ -435,10 +576,15 @@ const sumRecursively: jest.Mock<(value: number) => number> = jest.fn(value => {
   }
 });`;
 
-    const transformed = transformJestTestToVitest([{
-      path,
-      content: code,
-    }], {});
+    const transformed = transformJestTestToVitest(
+      [
+        {
+          path,
+          content: code,
+        },
+      ],
+      {},
+    );
 
     expect(transformed[0]?.content).toContain('process.env["VITEST_POOL_ID"]');
   });
@@ -453,12 +599,17 @@ it('adds 1 + 2 to equal 3', (done) => {
   done();
 });`;
 
-    const transformed = transformJestTestToVitest([{
-      path,
-      content: code,
-    }], {});
+    const transformed = transformJestTestToVitest(
+      [
+        {
+          path,
+          content: code,
+        },
+      ],
+      {},
+    );
 
-    expect(transformed[0]?.content).toContain('() => new Promise(done => {');
+    expect(transformed[0]?.content).toContain("() => new Promise(done => {");
   });
 
   it("should wrap callback in a lifecycle hook with Promise, even though the parameter name is not 'done'", () => {
@@ -471,11 +622,16 @@ it('adds 1 + 2 to equal 3', (cb) => {
   cb();
 });`;
 
-    const transformed = transformJestTestToVitest([{
-      path,
-      content: code,
-    }], {});
+    const transformed = transformJestTestToVitest(
+      [
+        {
+          path,
+          content: code,
+        },
+      ],
+      {},
+    );
 
-    expect(transformed[0]?.content).toContain('() => new Promise(cb => {');
+    expect(transformed[0]?.content).toContain("() => new Promise(cb => {");
   });
- });
+});
