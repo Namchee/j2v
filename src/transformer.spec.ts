@@ -650,5 +650,29 @@ it('adds 1 + 2 to equal 3', (cb) => {
     );
 
     expect(transformed[0]?.content).not.toContain('Automock');
+    expect(transformed[0]?.content).not.toContain("from 'vitest';")
+  });
+
+  it.only("should replace it.failing with it.fails", () => {
+    const path = "some/random/path.ts";
+    const code = `test.failing.each([
+  {a: 1, b: 1, expected: 2},
+  {a: 1, b: 2, expected: 3},
+  {a: 2, b: 1, expected: 3},
+])('.add($a, $b)', ({a, b, expected}) => {
+  expect(a + b).toBe(expected);
+});`;
+
+    const transformed = transformJestTestToVitest(
+      [
+        {
+          path,
+          content: code,
+        },
+      ],
+      {},
+    );
+
+    expect(transformed[0]?.content).toContain('test.fails');
   });
 });

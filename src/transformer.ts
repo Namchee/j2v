@@ -386,9 +386,9 @@ function transformCallExpression(
   callExpr: CallExpression,
   source: SourceFile,
 ): string | undefined {
-  const identifierCheck = callExpr.getChildrenOfKind(SyntaxKind.Identifier);
-  if (identifierCheck[0] && identifierCheck[0].getText() in JEST_GLOBALS) {
-    const mappingFn = JEST_GLOBALS[identifierCheck[0].getText()];
+  const identifiers = callExpr.getChildrenOfKind(SyntaxKind.Identifier);
+  if (identifiers[0] && identifiers[0].getText() in JEST_GLOBALS) {
+    const mappingFn = JEST_GLOBALS[identifiers[0].getText()];
 
     if (typeof mappingFn === "function") {
       mappingFn(callExpr, source);
@@ -396,7 +396,7 @@ function transformCallExpression(
       callExpr.setExpression(mappingFn as string);
     }
 
-    return identifierCheck[0].getText();
+    return identifiers[0].getText();
   }
 
   return transformJestAPI(callExpr, source);
@@ -507,6 +507,15 @@ export function transformJestTestToVitest(
           const jestTypes = transformTypeReference(node as TypeReferenceNode);
           if (jestTypes) {
             types.push(jestTypes);
+          }
+
+          break;
+        }
+
+        case SyntaxKind.PropertyAccessExpression: {
+          const identifiers = node.getChildrenOfKind(SyntaxKind.Identifier);
+          if (identifiers[0] && identifiers[0].getText() in JEST_GLOBALS && identifiers[1].getText() === "failing") {
+            identifiers[1]?.replaceWithText('fails');
           }
 
           break;
