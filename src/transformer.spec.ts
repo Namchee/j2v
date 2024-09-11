@@ -634,4 +634,21 @@ it('adds 1 + 2 to equal 3', (cb) => {
 
     expect(transformed[0]?.content).toContain("() => new Promise(cb => {");
   });
+
+  it("should remove disableAutoMock calls", () => {
+    const path = "some/random/path.ts";
+    const code = 'jest.disableAutomock();';
+
+    const transformed = transformJestTestToVitest(
+      [
+        {
+          path,
+          content: code,
+        },
+      ],
+      {},
+    );
+
+    expect(transformed[0]?.content).not.toContain('Automock');
+  });
 });

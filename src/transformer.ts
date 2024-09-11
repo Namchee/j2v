@@ -364,9 +364,7 @@ const JEST_UTILS: Record<string, Replacer> = {
     );
   },
   disableAutomock: (expr: CallExpression) => {
-    Logger.warning(
-      `Vitest doesn't support \`jest.disableAutomock\` API declared on line ${expr.getStartLineNumber(true)}. If you want to keep the automocking behavior, please register all of them as a setup file`,
-    );
+    expr.getParent()?.asKind(SyntaxKind.ExpressionStatement)?.remove();
   },
 };
 
@@ -422,7 +420,8 @@ function transformJestAPI(callExpr: CallExpression, source: SourceFile): string 
   }
 
   if (JEST_UTILS[method.getText()]) {
-    const mapping = JEST_UTILS[method.getText()];
+    const methodName = method.getText();
+    const mapping = JEST_UTILS[methodName];
 
     if (typeof mapping === "function") {
       mapping(callExpr, source);
@@ -430,7 +429,7 @@ function transformJestAPI(callExpr: CallExpression, source: SourceFile): string 
       callExpr.setExpression(`vi.${mapping}`);
     }
 
-    return "vi";
+    return methodName.includes("Automock") ? undefined : "vi";
   }
 
   Logger.warning(
@@ -438,7 +437,7 @@ function transformJestAPI(callExpr: CallExpression, source: SourceFile): string 
   );
 }
 
-function transformTypeReference(typeRef: TypeReferenceNode): string {
+function transformTypeReference(typeRef: TypeReferenceNode): string | undefined {
   const typeName = typeRef.getTypeName();
   const namespace = typeName.getFirstChild()?.getText();
   const typeProp = typeName.getLastChild()?.getText() as string;
@@ -450,8 +449,6 @@ function transformTypeReference(typeRef: TypeReferenceNode): string {
   }
 
   typeRef.getFirstAncestorByKind(SyntaxKind.VariableDeclaration)?.removeType();
-
-  return "";
 }
 
 function transformStringLiteral(node: StringLiteral) {
