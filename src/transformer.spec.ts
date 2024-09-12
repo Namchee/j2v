@@ -673,6 +673,8 @@ it('adds 1 + 2 to equal 3', (cb) => {
       {},
     );
 
+    console.log(transformed[0]?.content);
+
     expect(transformed[0]?.content).toContain('test.fails');
   });
 });

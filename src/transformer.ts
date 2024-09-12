@@ -1,7 +1,9 @@
 import {
   type CallExpression,
+  type Expression,
   IndentationText,
   Project,
+  type PropertyAccessExpression,
   QuoteKind,
   type SourceFile,
   type StringLiteral,
@@ -17,6 +19,25 @@ import type { TestFile } from "./test";
 // If the value is a string, it will just re-map to `vi.<name>`
 // If the value is a function, then the function will handle all the transformation
 type Replacer = string | ((expr: CallExpression, source: SourceFile) => void);
+
+function getChainedPropertyCalls(expression: Expression): string[] {
+  let expr = expression;
+  const parts: string[] = [];
+
+  // Traverse the expression recursively
+  while (expr && expr.getKind() === SyntaxKind.PropertyAccessExpression) {
+    const propertyAccess = expr as PropertyAccessExpression;
+    parts.unshift(propertyAccess.getName()); // Get the rightmost part
+    expr = propertyAccess.getExpression(); // Move to the left part
+  }
+
+  // Add the base object name (e.g., "test")
+  if (expression) {
+    parts.unshift(expression.getText());
+  }
+
+  return parts;
+}
 
 // List of common globals used in Jest
 const JEST_GLOBALS: Record<string, Replacer> = {
@@ -78,6 +99,9 @@ const JEST_GLOBALS: Record<string, Replacer> = {
   },
   describe: "describe",
   test: (expr: CallExpression) => {
+    const parts = getChainedPropertyCalls(expr);
+    console.log(parts);
+
     const fn = expr.getArguments()[1];
     if (!fn?.isKind(SyntaxKind.ArrowFunction)) {
       return;
@@ -96,6 +120,8 @@ const JEST_GLOBALS: Record<string, Replacer> = {
     actualTest?.getParameter(identifier)?.remove();
   },
   it: (expr: CallExpression) => {
+    const parts = getChainedPropertyCalls(expr);
+    console.log(parts);
     const fn = expr.getArguments()[1];
     if (!fn?.isKind(SyntaxKind.ArrowFunction)) {
       return;
@@ -386,9 +412,9 @@ function transformCallExpression(
   callExpr: CallExpression,
   source: SourceFile,
 ): string | undefined {
-  const identifiers = callExpr.getChildrenOfKind(SyntaxKind.Identifier);
-  if (identifiers[0] && identifiers[0].getText() in JEST_GLOBALS) {
-    const mappingFn = JEST_GLOBALS[identifiers[0].getText()];
+  const identifiers = getChainedPropertyCalls(callExpr.getExpression());
+  if (identifiers[0] && identifiers[0] in JEST_GLOBALS) {
+    const mappingFn = JEST_GLOBALS[identifiers[0]];
 
     if (typeof mappingFn === "function") {
       mappingFn(callExpr, source);
@@ -396,7 +422,7 @@ function transformCallExpression(
       callExpr.setExpression(mappingFn as string);
     }
 
-    return identifiers[0].getText();
+    return identifiers[0];
   }
 
   return transformJestAPI(callExpr, source);
@@ -512,14 +538,6 @@ export function transformJestTestToVitest(
           break;
         }
 
-        case SyntaxKind.PropertyAccessExpression: {
-          const identifiers = node.getChildrenOfKind(SyntaxKind.Identifier);
-          if (identifiers[0] && identifiers[0].getText() in JEST_GLOBALS && identifiers[1].getText() === "failing") {
-            identifiers[1]?.replaceWithText('fails');
-          }
-
-          break;
-        }
 
         case SyntaxKind.Identifier: {
           // https://vitest.dev/guide/migration.html#envs
