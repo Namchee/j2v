@@ -32,7 +32,7 @@ function getChainedPropertyCalls(expression: Expression): string[] {
   }
 
   // Add the base object name (e.g., "test")
-  if (expression) {
+  if (expression && expression.getKind() === SyntaxKind.Identifier) {
     parts.unshift(expression.getText());
   }
 
@@ -99,8 +99,8 @@ const JEST_GLOBALS: Record<string, Replacer> = {
   },
   describe: "describe",
   test: (expr: CallExpression) => {
+    console.log('here');
     const parts = getChainedPropertyCalls(expr);
-    console.log(parts);
 
     const fn = expr.getArguments()[1];
     if (!fn?.isKind(SyntaxKind.ArrowFunction)) {
@@ -121,7 +121,6 @@ const JEST_GLOBALS: Record<string, Replacer> = {
   },
   it: (expr: CallExpression) => {
     const parts = getChainedPropertyCalls(expr);
-    console.log(parts);
     const fn = expr.getArguments()[1];
     if (!fn?.isKind(SyntaxKind.ArrowFunction)) {
       return;
@@ -413,6 +412,7 @@ function transformCallExpression(
   source: SourceFile,
 ): string | undefined {
   const identifiers = getChainedPropertyCalls(callExpr.getExpression());
+  console.log(identifiers);
   if (identifiers[0] && identifiers[0] in JEST_GLOBALS) {
     const mappingFn = JEST_GLOBALS[identifiers[0]];
 
