@@ -77,6 +77,8 @@ const JEST_GLOBALS: Record<string, Replacer> = {
     }
   },
   describe: "describe",
+  fdescribe: "describe.only",
+  xdescribe: "describe.skip",
   test: (expr: CallExpression) => {
     const fn = expr.getArguments()[1];
     if (!fn?.isKind(SyntaxKind.ArrowFunction)) {
@@ -426,7 +428,7 @@ function transformCallExpression(
     const newExpr = mappedProp as string;
 
     callExpr.setExpression(newExpr);
-    return newExpr
+    return newExpr.split('.').shift();
   }
 
   return transformJestAPI(callExpr, source);

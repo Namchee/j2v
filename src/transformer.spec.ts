@@ -694,5 +694,43 @@ it('adds 1 + 2 to equal 3', (cb) => {
 
     expect(transformed[0]?.content).toContain('it.only');
     expect(transformed[0]?.content).not.toContain('fit');
-  })
+  });
+
+  it("should transform 'xdescribe' into 'describe.skip'", () => {
+    const path = "some/random/path.ts";
+    const code = `xdescribe('something', () => {
+});`;
+
+    const transformed = transformJestTestToVitest(
+      [
+        {
+          path,
+          content: code,
+        },
+      ],
+      {},
+    );
+
+    expect(transformed[0]?.content).toContain("import { describe } from 'vitest';");
+    expect(transformed[0]?.content).toContain('describe.skip');
+  });
+
+  it("should transform 'fdescribe' into 'describe.only'", () => {
+    const path = "some/random/path.ts";
+    const code = `fdescribe('something', () => {
+});`;
+
+    const transformed = transformJestTestToVitest(
+      [
+        {
+          path,
+          content: code,
+        },
+      ],
+      {},
+    );
+
+    expect(transformed[0]?.content).toContain("import { describe } from 'vitest';");
+    expect(transformed[0]?.content).toContain('describe.only');
+  });
 });
