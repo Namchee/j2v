@@ -2,7 +2,6 @@ import {
   type CallExpression,
   IndentationText,
   Project,
-  type PropertyAccessExpression,
   QuoteKind,
   type SourceFile,
   type StringLiteral,
@@ -114,9 +113,7 @@ const JEST_GLOBALS: Record<string, Replacer> = {
     actualTest?.replaceWithText(`() => new Promise(${identifier} => ${body} )`);
     actualTest?.getParameter(identifier)?.remove();
   },
-  fit: (expr: CallExpression) => {
-    expr.setExpression('it.only');
-  },
+  fit: "it.only",
   expect: "expect",
 };
 
@@ -372,15 +369,6 @@ const JEST_UTILS: Record<string, Replacer> = {
   },
 };
 
-const JEST_PROPERTIES: Record<string, Record<string, string> > = {
-  test: {
-    failing: 'fails',
-  },
-  it: {
-    failing: 'fails',
-  }
-}
-
 // List of commonly used (and mappable) Jest types
 const JEST_TYPES = [
   "Mock",
@@ -395,22 +383,50 @@ const JEST_TYPES = [
   "MockedClass",
 ];
 
+function getChainedExpressionCall(expr: CallExpression): string[] {
+  const firstChild = expr.getChildAtIndex(0);
+  if (firstChild.isKind(SyntaxKind.Identifier)) {
+    return [firstChild.getText()];
+  }
+
+  const parts: string[] = [];
+
+  let propExpr = expr.getFirstDescendantByKind(SyntaxKind.PropertyAccessExpression);
+  while (propExpr) {
+    parts.unshift(propExpr.getName());
+    const child = propExpr.getFirstChildByKind(SyntaxKind.PropertyAccessExpression);
+
+    if (child) {
+      propExpr = child;
+    } else {
+      const lastIdentifier = propExpr.getChildAtIndex(0);
+      parts.unshift(lastIdentifier.getText());
+      break;
+    }
+  }
+
+  return parts;
+}
+
 function transformCallExpression(
   callExpr: CallExpression,
   source: SourceFile,
 ): string | undefined {
-  const identifiers = callExpr.getChildrenOfKind(SyntaxKind.Identifier).map(id => id.getText());
+  const propertyChain = getChainedExpressionCall(callExpr);
 
-  if (identifiers[0] && identifiers[0] in JEST_GLOBALS) {
-    const mappingFn = JEST_GLOBALS[identifiers[0]];
+  if (propertyChain[0] && propertyChain[0] in JEST_GLOBALS) {
+    const mappedProp = JEST_GLOBALS[propertyChain[0]];
 
-    if (typeof mappingFn === "function") {
-      mappingFn(callExpr, source);
-    } else {
-      callExpr.setExpression(mappingFn as string);
+    if (typeof mappedProp === "function") {
+      mappedProp(callExpr, source);
+
+      return propertyChain[0];
     }
 
-    return identifiers[0] === "fit" ? "it" : identifiers[0];
+    const newExpr = mappedProp as string;
+
+    callExpr.setExpression(newExpr);
+    return newExpr
   }
 
   return transformJestAPI(callExpr, source);
@@ -449,21 +465,6 @@ function transformJestAPI(callExpr: CallExpression, source: SourceFile): string 
   Logger.warning(
     `j2v cannot transform \`${propertyExpr.getText()}\` on line ${callExpr.getStartLineNumber(true)} in \`${source.getBaseName()}\` correctly. You might want to transform it to Vitest equivalent manually`,
   );
-}
-
-function transformPropertyAccessExpression(propExpr: PropertyAccessExpression) {
-  const identifiers = propExpr.getChildrenOfKind(SyntaxKind.Identifier);
-  if (identifiers[0] && JEST_PROPERTIES[identifiers[0].getText()]) {
-    const mapping = JEST_PROPERTIES[identifiers[0].getText()] as Record<string, string>;
-
-    for (let idx = 1; idx < identifiers.length; idx++) {
-      const identifier = identifiers[idx]?.getText();
-
-      if (identifier && mapping[identifier]) {
-        identifiers[idx]?.replaceWithText(mapping[identifier]);
-      }
-    }
-  }
 }
 
 function transformTypeReference(typeRef: TypeReferenceNode): string | undefined {
@@ -537,12 +538,6 @@ export function transformJestTestToVitest(
           if (jestTypes) {
             types.push(jestTypes);
           }
-
-          break;
-        }
-
-        case SyntaxKind.PropertyAccessExpression: {
-          transformPropertyAccessExpression(node as PropertyAccessExpression);
 
           break;
         }

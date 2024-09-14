@@ -678,7 +678,7 @@ it('adds 1 + 2 to equal 3', (cb) => {
 
   it("should transform 'fit' into 'it.only'", () => {
     const path = "some/random/path.ts";
-    const code = `fit('it is raining', () => {
+    const code = `fit.each('it is raining', () => {
   expect(inchesOfRain()).toBeGreaterThan(0);
 });`;
 
