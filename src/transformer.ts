@@ -1,6 +1,5 @@
 import {
   type CallExpression,
-  type Expression,
   IndentationText,
   Project,
   type PropertyAccessExpression,
@@ -19,25 +18,6 @@ import type { TestFile } from "./test";
 // If the value is a string, it will just re-map to `vi.<name>`
 // If the value is a function, then the function will handle all the transformation
 type Replacer = string | ((expr: CallExpression, source: SourceFile) => void);
-
-function getChainedPropertyCalls(expression: Expression): string[] {
-  let expr = expression;
-  const parts: string[] = [];
-
-  // Traverse the expression recursively
-  while (expr && expr.getKind() === SyntaxKind.PropertyAccessExpression) {
-    const propertyAccess = expr as PropertyAccessExpression;
-    parts.unshift(propertyAccess.getName()); // Get the rightmost part
-    expr = propertyAccess.getExpression(); // Move to the left part
-  }
-
-  // Add the base object name (e.g., "test")
-  if (expression && expression.getKind() === SyntaxKind.Identifier) {
-    parts.unshift(expression.getText());
-  }
-
-  return parts;
-}
 
 // List of common globals used in Jest
 const JEST_GLOBALS: Record<string, Replacer> = {
@@ -99,9 +79,6 @@ const JEST_GLOBALS: Record<string, Replacer> = {
   },
   describe: "describe",
   test: (expr: CallExpression) => {
-    console.log('here');
-    const parts = getChainedPropertyCalls(expr);
-
     const fn = expr.getArguments()[1];
     if (!fn?.isKind(SyntaxKind.ArrowFunction)) {
       return;
@@ -120,7 +97,6 @@ const JEST_GLOBALS: Record<string, Replacer> = {
     actualTest?.getParameter(identifier)?.remove();
   },
   it: (expr: CallExpression) => {
-    const parts = getChainedPropertyCalls(expr);
     const fn = expr.getArguments()[1];
     if (!fn?.isKind(SyntaxKind.ArrowFunction)) {
       return;
@@ -407,12 +383,35 @@ const JEST_TYPES = [
   "MockedClass",
 ];
 
+function getExpressionIdentifier(expression: CallExpression): string[] {
+  if (expression.getChildrenOfKind(SyntaxKind.Identifier).length) {
+    const firstIdentifier = expression.getFirstChildByKind(SyntaxKind.Identifier);
+    return [firstIdentifier?.getText() as string];
+  }
+
+  let curr: PropertyAccessExpression | undefined = expression.getFirstDescendantByKind(SyntaxKind.PropertyAccessExpression);
+  const parts: string[] = [];
+
+  while (curr) {
+    parts.unshift(curr.getName());
+    const next = curr.getFirstChildByKind(SyntaxKind.PropertyAccessExpression);
+    if (next) {
+      curr = next;
+    } else {
+      parts.unshift(curr.getChildAtIndex(0).getText());
+      break;
+    }
+  }
+
+  return parts;
+}
+
 function transformCallExpression(
   callExpr: CallExpression,
   source: SourceFile,
 ): string | undefined {
-  const identifiers = getChainedPropertyCalls(callExpr.getExpression());
-  console.log(identifiers);
+  const identifiers = getExpressionIdentifier(callExpr);
+
   if (identifiers[0] && identifiers[0] in JEST_GLOBALS) {
     const mappingFn = JEST_GLOBALS[identifiers[0]];
 
