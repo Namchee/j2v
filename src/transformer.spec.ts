@@ -653,7 +653,7 @@ it('adds 1 + 2 to equal 3', (cb) => {
     expect(transformed[0]?.content).not.toContain("from 'vitest';")
   });
 
-  it.only("should replace it.failing with it.fails", () => {
+  it("should replace it.failing with it.fails", () => {
     const path = "some/random/path.ts";
     const code = `test.failing.each([
   {a: 1, b: 1, expected: 2},
@@ -673,8 +673,26 @@ it('adds 1 + 2 to equal 3', (cb) => {
       {},
     );
 
-    console.log(transformed[0]?.content);
-
     expect(transformed[0]?.content).toContain('test.fails');
   });
+
+  it("should transform 'fit' into 'it.only'", () => {
+    const path = "some/random/path.ts";
+    const code = `fit('it is raining', () => {
+  expect(inchesOfRain()).toBeGreaterThan(0);
+});`;
+
+    const transformed = transformJestTestToVitest(
+      [
+        {
+          path,
+          content: code,
+        },
+      ],
+      {},
+    );
+
+    expect(transformed[0]?.content).toContain('it.only');
+    expect(transformed[0]?.content).not.toContain('fit');
+  })
 });
