@@ -1,5 +1,6 @@
 import {
   type CallExpression,
+  type Identifier,
   IndentationText,
   Project,
   QuoteKind,
@@ -92,12 +93,15 @@ const JEST_GLOBALS: Record<string, Replacer> = {
     }
 
     const body = actualTest?.getBody().getText();
-    const identifier = params[0]?.getText() as string;
 
-    actualTest?.replaceWithText(`() => new Promise(${identifier} => ${body} )`);
-    actualTest?.getParameter(identifier)?.remove();
+    actualTest?.replaceWithText(`() => new Promise((${params.join(', ')})) => ${body} )`);
+    for (const param of params) {
+      param.remove();
+    }
   },
   it: (expr: CallExpression) => {
+    const properties = getChainedExpressionCall(expr);
+    if (properties[])
     const fn = expr.getArguments()[1];
     if (!fn?.isKind(SyntaxKind.ArrowFunction)) {
       return;
@@ -110,12 +114,33 @@ const JEST_GLOBALS: Record<string, Replacer> = {
     }
 
     const body = actualTest?.getBody().getText();
-    const identifier = params[0]?.getText() as string;
 
-    actualTest?.replaceWithText(`() => new Promise(${identifier} => ${body} )`);
-    actualTest?.getParameter(identifier)?.remove();
+    actualTest?.replaceWithText(`() => new Promise((${params.join(', ')})) => ${body} )`);
+    for (const param of params) {
+      param.remove();
+    }
   },
-  fit: "it.only",
+  fit: (expr: CallExpression) => {
+    expr.replaceWithText("it.only");
+
+    const fn = expr.getArguments()[1];
+    if (!fn?.isKind(SyntaxKind.ArrowFunction)) {
+      return;
+    }
+
+    const actualTest = fn.asKind(SyntaxKind.ArrowFunction);
+    const params = actualTest?.getParameters();
+    if (!params || params.length === 0) {
+      return;
+    }
+
+    const body = actualTest?.getBody().getText();
+
+    actualTest?.replaceWithText(`() => new Promise((${params.join(', ')})) => ${body} )`);
+    for (const param of params) {
+      param.remove();
+    }
+  },
   expect: "expect",
 };
 
@@ -385,24 +410,24 @@ const JEST_TYPES = [
   "MockedClass",
 ];
 
-function getChainedExpressionCall(expr: CallExpression): string[] {
+function getChainedExpressionCall(expr: CallExpression): Identifier[] {
   const firstChild = expr.getChildAtIndex(0);
   if (firstChild.isKind(SyntaxKind.Identifier)) {
-    return [firstChild.getText()];
+    return [firstChild];
   }
 
-  const parts: string[] = [];
+  const parts: Identifier[] = [];
 
   let propExpr = expr.getFirstDescendantByKind(SyntaxKind.PropertyAccessExpression);
   while (propExpr) {
-    parts.unshift(propExpr.getName());
+    parts.unshift(propExpr.getLastChildByKind(SyntaxKind.Identifier) as Identifier);
     const child = propExpr.getFirstChildByKind(SyntaxKind.PropertyAccessExpression);
 
     if (child) {
       propExpr = child;
     } else {
       const lastIdentifier = propExpr.getChildAtIndex(0);
-      parts.unshift(lastIdentifier.getText());
+      parts.unshift(lastIdentifier as Identifier);
       break;
     }
   }
@@ -416,13 +441,13 @@ function transformCallExpression(
 ): string | undefined {
   const propertyChain = getChainedExpressionCall(callExpr);
 
-  if (propertyChain[0] && propertyChain[0] in JEST_GLOBALS) {
-    const mappedProp = JEST_GLOBALS[propertyChain[0]];
+  if (propertyChain[0] && propertyChain[0].getText() in JEST_GLOBALS) {
+    const mappedProp = JEST_GLOBALS[propertyChain[0].getText()];
 
     if (typeof mappedProp === "function") {
       mappedProp(callExpr, source);
 
-      return propertyChain[0];
+      return propertyChain[0].getText();
     }
 
     const newExpr = mappedProp as string;
