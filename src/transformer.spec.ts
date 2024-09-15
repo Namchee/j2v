@@ -635,6 +635,32 @@ it('adds 1 + 2 to equal 3', (cb) => {
     expect(transformed[0]?.content).toContain("() => new Promise((cb) => {");
   });
 
+  it("should wrap tabular test callback in a lifecycle hook with Promise", () => {
+    const path = "some/random/path.ts";
+    const code = `test.failing.each([
+  { a: 1, b: 1, expected: 2 },
+  { a: 1, b: 2, expected: 3 },
+  { a: 2, b: 1, expected: 3 },
+])('.add($a, $b)', ({ a, b, expected }, done) => {
+  setTimeout(() => {
+    expect(a + b).toBe(expected);
+    done();
+  }, 100);
+});`;
+
+    const transformed = transformJestTestToVitest(
+      [
+        {
+          path,
+          content: code,
+        },
+      ],
+      {},
+    );
+
+    expect(transformed[0]?.content).toContain("() => new Promise(({ a, b, expected }, done) => {");
+  });
+
   it("should remove disableAutoMock calls", () => {
     const path = "some/random/path.ts";
     const code = 'jest.disableAutomock();';
