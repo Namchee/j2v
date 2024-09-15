@@ -81,6 +81,11 @@ const JEST_GLOBALS: Record<string, Replacer> = {
   fdescribe: "describe.only",
   xdescribe: "describe.skip",
   test: (expr: CallExpression) => {
+    const properties = getChainedExpressionCall(expr);
+    if (properties[1]?.getText() === "failing") {
+      properties[1].replaceWithText("fails");
+    }
+
     const fn = expr.getArguments()[1];
     if (!fn?.isKind(SyntaxKind.ArrowFunction)) {
       return;
@@ -94,14 +99,14 @@ const JEST_GLOBALS: Record<string, Replacer> = {
 
     const body = actualTest?.getBody().getText();
 
-    actualTest?.replaceWithText(`() => new Promise((${params.join(', ')})) => ${body} )`);
-    for (const param of params) {
-      param.remove();
-    }
+    actualTest?.replaceWithText(`() => new Promise((${params.map(p => p.getText()).join(', ')}) => ${body} )`);
   },
   it: (expr: CallExpression) => {
     const properties = getChainedExpressionCall(expr);
-    if (properties[])
+    if (properties[1]?.getText() === "failing") {
+      properties[1].replaceWithText("fails");
+    }
+
     const fn = expr.getArguments()[1];
     if (!fn?.isKind(SyntaxKind.ArrowFunction)) {
       return;
@@ -115,13 +120,15 @@ const JEST_GLOBALS: Record<string, Replacer> = {
 
     const body = actualTest?.getBody().getText();
 
-    actualTest?.replaceWithText(`() => new Promise((${params.join(', ')})) => ${body} )`);
-    for (const param of params) {
-      param.remove();
-    }
+    actualTest?.replaceWithText(`() => new Promise((${params.map(p => p.getText()).join(', ')}) => ${body} )`);
   },
   fit: (expr: CallExpression) => {
-    expr.replaceWithText("it.only");
+    const properties = getChainedExpressionCall(expr);
+    if (properties[1]?.getText() === "failing") {
+      properties[1].replaceWithText("fails");
+    }
+
+    expr.setExpression(`it.only.${properties.slice(1).map(p => p.getText()).join('.')}`);
 
     const fn = expr.getArguments()[1];
     if (!fn?.isKind(SyntaxKind.ArrowFunction)) {
@@ -136,10 +143,7 @@ const JEST_GLOBALS: Record<string, Replacer> = {
 
     const body = actualTest?.getBody().getText();
 
-    actualTest?.replaceWithText(`() => new Promise((${params.join(', ')})) => ${body} )`);
-    for (const param of params) {
-      param.remove();
-    }
+    actualTest?.replaceWithText(`() => new Promise((${params.map(p => p.getText()).join(', ')}) => ${body} )`);
   },
   expect: "expect",
 };
@@ -445,9 +449,10 @@ function transformCallExpression(
     const mappedProp = JEST_GLOBALS[propertyChain[0].getText()];
 
     if (typeof mappedProp === "function") {
+      const originalText = propertyChain[0].getText();
       mappedProp(callExpr, source);
 
-      return propertyChain[0].getText();
+      return originalText === "fit" ? "it" : originalText;
     }
 
     const newExpr = mappedProp as string;

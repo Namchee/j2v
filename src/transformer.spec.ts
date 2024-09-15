@@ -609,7 +609,7 @@ it('adds 1 + 2 to equal 3', (done) => {
       {},
     );
 
-    expect(transformed[0]?.content).toContain("() => new Promise(done => {");
+    expect(transformed[0]?.content).toContain("() => new Promise((done) => {");
   });
 
   it("should wrap callback in a lifecycle hook with Promise, even though the parameter name is not 'done'", () => {
@@ -632,7 +632,7 @@ it('adds 1 + 2 to equal 3', (cb) => {
       {},
     );
 
-    expect(transformed[0]?.content).toContain("() => new Promise(cb => {");
+    expect(transformed[0]?.content).toContain("() => new Promise((cb) => {");
   });
 
   it("should remove disableAutoMock calls", () => {
@@ -678,7 +678,7 @@ it('adds 1 + 2 to equal 3', (cb) => {
 
   it("should transform 'fit' into 'it.only'", () => {
     const path = "some/random/path.ts";
-    const code = `fit.each('it is raining', () => {
+    const code = `fit('it is raining', () => {
   expect(inchesOfRain()).toBeGreaterThan(0);
 });`;
 
@@ -693,6 +693,26 @@ it('adds 1 + 2 to equal 3', (cb) => {
     );
 
     expect(transformed[0]?.content).toContain('it.only');
+    expect(transformed[0]?.content).not.toContain('fit');
+  });
+
+  it("should transform 'fit.failing' into 'it.only.fails'", () => {
+    const path = "some/random/path.ts";
+    const code = `fit.failing('it is raining', () => {
+  expect(inchesOfRain()).toBeGreaterThan(1);
+});`;
+
+    const transformed = transformJestTestToVitest(
+      [
+        {
+          path,
+          content: code,
+        },
+      ],
+      {},
+    );
+
+    expect(transformed[0]?.content).toContain('it.only.fails');
     expect(transformed[0]?.content).not.toContain('fit');
   });
 
