@@ -122,20 +122,27 @@ Below are the list of compatible Jest's API that can be transformed. List of API
 | [`getSeed`](https://jestjs.io/docs/jest-object#jestgetseed) | ❌ | - |
 | [`isEnvironmentTornDown`](https://jestjs.io/docs/jest-object#jestisenvironmenttorndown) | ❌ | - |
 | [`retryTimes`](https://jestjs.io/docs/jest-object#jestretrytimesnumretries-options) | ❌ | - |
-| [`setTimeout`](https://jestjs.io/docs/jest-object#jestsettimeouttimeout) | ✅ | [`setConfig`](https://vitest.dev/guide/migration.html#timeout) |
+| [`setTimeout`](https://jestjs.io/docs/jest-object#jestsettimeouttimeout) | ✅ | [`setConfig`](https://vitest.dev/guide/migration.html#timeout)
+
+## Jest Globals
+
+| Global | Supported? | Transformer To |
+| ----- | :---------: | -------------- |
+| [`afterAll`](https://jestjs.io/docs/api#afterallfn-timeout) | ✅ | [`afterAll`](https://vitest.dev/api/#afterall)[^13] |
+| [`afterEach`](https://jestjs.io/docs/api#aftereachfn-timeout) | ✅ | [`afterEach`](https://vitest.dev/api/#aftereach)[^13] |
+| [`beforeAll`](https://jestjs.io/docs/api#beforeallfn-timeout) | ✅ | [`beforeAll`](https://vitest.dev/api/#beforeall)[^13] |
+| [`beforeEach`](https://jestjs.io/docs/api#beforeeachfn-timeout) | ✅ | [`beforeEach`](https://vitest.dev/api/#beforeeach)[^13] |
+| [`describe`](https://jestjs.io/docs/api#describename-fn) | ✅ | [`describe`](https://vitest.dev/api/#describe) |
+| [`describe`](https://jestjs.io/docs/api#describename-fn) | ✅ | [`describe`](https://vitest.dev/api/#describe) |
+| [`fdescribe`](https://jestjs.io/docs/api#describeonlyname-fn) | ✅ | [`describe.only`](https://vitest.dev/api/#describe-only) |
+| [`xdescribe`](https://jestjs.io/docs/api#describeskipname-fn) | ✅ | [`describe.skip`](https://vitest.dev/api/#describe-skip) |
+| [`test`](https://jestjs.io/docs/api#testname-fn-timeout) | ✅ | [`test`](https://vitest.dev/api/#test)[^14] |
+| [`it`](https://jestjs.io/docs/api#testname-fn-timeout) | ✅ | [`it`](https://vitest.dev/api/#test)[^14] |
+| [`fit`](https://jestjs.io/docs/api#beforeeachfn-timeout) | ✅ | [`it.only`](https://vitest.dev/api/#test-only)[^14] |
+| [`xit`](https://jestjs.io/docs/api#testskipfailingname-fn-timeout) | ✅ | [`it.fails`](https://vitest.dev/api/#test-fails)[^14] |
+| [`xtest`](https://jestjs.io/docs/api#testskipfailingname-fn-timeout) | ✅ | [`it.fails`](https://vitest.dev/api/#test-fails)[^14] |
 
 ## Jest Types
-
- "Mock",
-  "Mocked",
-  "Replaced",
-  "Spied",
-  "Mock",
-  "MockContext",
-  "MockInstance",
-  "MockedObject",
-  "MockedFunction",
-  "MockedClass",
 
 | Types | Supported? |
 | ----- | :--------: |
@@ -143,7 +150,6 @@ Below are the list of compatible Jest's API that can be transformed. List of API
 | [`Mocked`](https://jestjs.io/docs/jest-object#jestmockedsource) | ✅ |
 | [`Replaced`](https://jestjs.io/docs/mock-function-api#jestreplacedsource) | ✅ |
 | [`Spied`](https://jestjs.io/docs/mock-function-api#jestspiedsource) | ✅ |
-| `MockContext` | ✅ |
 | `MockContext` | ✅ |
 | `MockInstance` | ✅ |
 | `MockedObject` | ✅ |
@@ -162,3 +168,5 @@ Below are the list of compatible Jest's API that can be transformed. List of API
 [^10]: If the factory function returns a primitive value, it will be wrapped in `default: <value>`. [ES6 default module behavior in Vitest](https://vitest.dev/api/vi.html#mock-modules)
 [^11]: Since Vitest doesn't support auto-mocking, this expression will be removed.
 [^12]: A warning will be issued if found.
+[^13]: Will be wrapped in a function in accordance to [Vitest migration guide](https://vitest.dev/guide/migration.html#hooks)
+[^14]: Callback-style asynchronous testing will be [wrapped in `Promise`](https://vitest.dev/guide/migration.html#done-callback)
