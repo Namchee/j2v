@@ -6,7 +6,7 @@ Below are the list of compatible Jest's API that can be transformed. List of API
 
 | Key | Supported? | Transformed To |
 | --- | :--------: | -------------- |
-| `automock` | ❌ | - |
+| [`automock`](https://jestjs.io/docs/configuration#automock-boolean) | ❌ | - |
 | [`bail`](https://jestjs.io/docs/configuration#bail-number--boolean) | ✅ | [`bail`](https://vitest.dev/config/#bail)[^1] |
 | [`cacheDirectory`](https://jestjs.io/docs/configuration#cachedirectory-string) | ✅ | [`server.deps.cacheDir`](https://vitest.dev/config/#server-deps-cachedir) |
 | [`clearMocks`](https://jestjs.io/docs/configuration#clearmocks-boolean) | ✅ | [`clearMocks`](https://vitest.dev/config/#clearmocks) |
@@ -81,8 +81,8 @@ Below are the list of compatible Jest's API that can be transformed. List of API
 
 | API | Supported? | Transformed To |
 | --- | :--------: | -------------- |
-| [`disableAutoMock`](https://jestjs.io/docs/jest-object#jestdisableautomock) | ❌ | -[^11] |
-| [`enableAutoMock`](https://jestjs.io/docs/jest-object#jestenableautomock) | ❌ | -[^11] |
+| [`disableAutoMock`](https://jestjs.io/docs/jest-object#jestdisableautomock) | ✅ | -[^11] |
+| [`enableAutoMock`](https://jestjs.io/docs/jest-object#jestenableautomock) | ❌ | -[^12] |
 | [`createMockFromModule`](https://jestjs.io/docs/jest-object#jestcreatemockfrommodulemodulename) | ❌ | - |
 | [`mock`](https://jestjs.io/docs/jest-object#jestmockmodulename-factory-options) | ✅ | [`mock`](https://vitest.dev/api/vi.html#vi-mock) |
 | [`mocked`](https://jestjs.io/docs/jest-object#jestmockedsource-options) | ✅ | [`mocked`](https://vitest.dev/api/vi.html#vi-mocked)[^10] |
@@ -126,13 +126,29 @@ Below are the list of compatible Jest's API that can be transformed. List of API
 
 ## Jest Types
 
+ "Mock",
+  "Mocked",
+  "Replaced",
+  "Spied",
+  "Mock",
+  "MockContext",
+  "MockInstance",
+  "MockedObject",
+  "MockedFunction",
+  "MockedClass",
+
 | Types | Supported? |
 | ----- | :--------: |
 | [`Mock`](https://jestjs.io/docs/mock-function-api#jestmockt) | ✅ |
 | [`Mocked`](https://jestjs.io/docs/jest-object#jestmockedsource) | ✅ |
 | [`Replaced`](https://jestjs.io/docs/mock-function-api#jestreplacedsource) | ✅ |
 | [`Spied`](https://jestjs.io/docs/mock-function-api#jestspiedsource) | ✅ |
-| [``]
+| `MockContext` | ✅ |
+| `MockContext` | ✅ |
+| `MockInstance` | ✅ |
+| `MockedObject` | ✅ |
+| `MockedFunction` | ✅ |
+| `MockedClass` | ✅ |
 
 [^1]: Converted to `number`
 [^2]: Forcefully transformed to `v8`
@@ -144,4 +160,5 @@ Below are the list of compatible Jest's API that can be transformed. List of API
 [^8]: `threads` if `true`, `forks` otherwise
 [^9]: Transformed into an `async` function
 [^10]: If the factory function returns a primitive value, it will be wrapped in `default: <value>`. [ES6 default module behavior in Vitest](https://vitest.dev/api/vi.html#mock-modules)
-[^11]: A warning will be issued if detected
+[^11]: Since Vitest doesn't support auto-mocking, this expression will be removed.
+[^12]: A warning will be issued if found.

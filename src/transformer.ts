@@ -452,7 +452,6 @@ const JEST_TYPES = [
   "Mocked",
   "Replaced",
   "Spied",
-  "Mock",
   "MockContext",
   "MockInstance",
   "MockedObject",
