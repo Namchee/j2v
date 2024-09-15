@@ -145,6 +145,52 @@ const JEST_GLOBALS: Record<string, Replacer> = {
 
     actualTest?.replaceWithText(`() => new Promise((${params.map(p => p.getText()).join(', ')}) => ${body} )`);
   },
+  xit: (expr: CallExpression) => {
+    const properties = getChainedExpressionCall(expr);
+    if (properties[1]?.getText() === "failing") {
+      properties[1].replaceWithText("fails");
+    }
+
+    expr.setExpression(`it.skip.${properties.slice(1).map(p => p.getText()).join('.')}`);
+
+    const fn = expr.getArguments()[1];
+    if (!fn?.isKind(SyntaxKind.ArrowFunction)) {
+      return;
+    }
+
+    const actualTest = fn.asKind(SyntaxKind.ArrowFunction);
+    const params = actualTest?.getParameters();
+    if (!params || params.length === 0) {
+      return;
+    }
+
+    const body = actualTest?.getBody().getText();
+
+    actualTest?.replaceWithText(`() => new Promise((${params.map(p => p.getText()).join(', ')}) => ${body} )`);
+  },
+  xtest: (expr: CallExpression) => {
+    const properties = getChainedExpressionCall(expr);
+    if (properties[1]?.getText() === "failing") {
+      properties[1].replaceWithText("fails");
+    }
+
+    expr.setExpression(`it.skip.${properties.slice(1).map(p => p.getText()).join('.')}`);
+
+    const fn = expr.getArguments()[1];
+    if (!fn?.isKind(SyntaxKind.ArrowFunction)) {
+      return;
+    }
+
+    const actualTest = fn.asKind(SyntaxKind.ArrowFunction);
+    const params = actualTest?.getParameters();
+    if (!params || params.length === 0) {
+      return;
+    }
+
+    const body = actualTest?.getBody().getText();
+
+    actualTest?.replaceWithText(`() => new Promise((${params.map(p => p.getText()).join(', ')}) => ${body} )`);
+  },
   expect: "expect",
 };
 

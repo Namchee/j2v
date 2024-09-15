@@ -753,4 +753,42 @@ it('adds 1 + 2 to equal 3', (cb) => {
     expect(transformed[0]?.content).toContain("import { describe } from 'vitest';");
     expect(transformed[0]?.content).toContain('describe.only');
   });
+
+  it("should transform 'xit' into 'it.skip'", () => {
+    const path = "some/random/path.ts";
+    const code = `xit('it is raining', () => {
+  expect(inchesOfRain()).toBeGreaterThan(0);
+});`;
+
+    const transformed = transformJestTestToVitest(
+      [
+        {
+          path,
+          content: code,
+        },
+      ],
+      {},
+    );
+
+    expect(transformed[0]?.content).toContain('it.skip');
+  });
+
+  it("should transform 'xtest' into 'it.skip'", () => {
+    const path = "some/random/path.ts";
+    const code = `xtest.failing('it is raining', () => {
+  expect(inchesOfRain()).toBeGreaterThan(0);
+});`;
+
+    const transformed = transformJestTestToVitest(
+      [
+        {
+          path,
+          content: code,
+        },
+      ],
+      {},
+    );
+
+    expect(transformed[0]?.content).toContain('it.skip');
+  });
 });
