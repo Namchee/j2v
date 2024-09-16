@@ -13,11 +13,11 @@ import { Logger } from "./logger";
 
 import { installVitest, removeJestDeps } from "./deps";
 import { formatSetupFile, formatVitestConfig } from "./formatter";
+import { getTestFiles } from "./fs";
 import { getJestConfig } from "./jest";
 import { transformJestConfigToVitest } from "./mapper";
 import { transformJestScriptsToVitest } from "./scripts";
 import { constructDOMCleanupFile } from "./setup";
-import { getTestFiles } from "./test";
 import { transformJestTestToVitest } from "./transformer";
 
 import type { CleanupFile } from "./setup";

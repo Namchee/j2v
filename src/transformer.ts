@@ -13,7 +13,7 @@ import {
 import { Logger } from "./logger";
 
 import type { UserConfig } from "vitest/config";
-import type { TestFile } from "./test";
+import type { TestFile } from "./fs";
 
 // If the value is a string, it will just re-map to `vi.<name>`
 // If the value is a function, then the function will handle all the transformation
@@ -593,7 +593,7 @@ export function transformJestTestToVitest(
   for (const file of testFiles) {
     Logger.debug(`Transforming ${file.path}`);
 
-    const source = project.createSourceFile(file.path, file.content);
+    const source = project.addSourceFileAtPath(file.path);
 
     const types: string[] = [];
     const api: string[] = [];
