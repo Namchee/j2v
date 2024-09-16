@@ -7,7 +7,7 @@
     "j2v": "./dist/main.js"
   },
   "scripts": {
-    "test": "vitest",
+    "test": "vitest watch",
     "lint": "biome",
     "build": "tsup src/config.ts --format esm",
     "list": "vitest list"
