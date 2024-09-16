@@ -1,3 +1,5 @@
+import { readFile } from "node:fs/promises";
+
 import { globSync } from "tinyglobby";
 
 import type { UserConfig } from "vitest/config";
@@ -16,9 +18,18 @@ export type TestFile = {
   content: string;
 };
 
-export function getTestFiles(config: UserConfig["test"]): string[] {
+export function getTestFiles(config: UserConfig["test"]): Promise<TestFile[]> {
   const includes = config?.include || DEFAULT_INCLUDES;
   const excludes = config?.exclude || DEFAULT_EXCLUDES;
 
-  return globSync(includes, { ignore: excludes });
+  const globs = globSync(includes, { ignore: excludes });
+
+  return Promise.all(globs.map(async (path) => {
+    const content = await readFile(path);
+
+    return {
+      path,
+      content: content.toString(),
+    };
+  }));
 }

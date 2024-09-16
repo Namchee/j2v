@@ -115,7 +115,7 @@ export function transformJestTestToVitest(
   for (const file of testFiles) {
     Logger.debug(`Transforming ${file.path}`);
 
-    const source = project.addSourceFileAtPath(file.path);
+    const source = project.createSourceFile(file.path, file.content, { overwrite: true });
 
     const types: string[] = [];
     const api: string[] = [];
