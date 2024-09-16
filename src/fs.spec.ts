@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import type { UserConfig } from "vitest/config";
 
 import * as tg from "tinyglobby";
+
 import { getTestFiles } from "./fs";
 
 vi.mock("tinyglobby", () => ({

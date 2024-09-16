@@ -10,8 +10,7 @@
     "test": "vitest",
     "lint": "biome",
     "build": "tsup src/config.ts --format esm",
-    "list": "vitest list",
-    "test:vitest": "vitest"
+    "list": "vitest list"
   },
   "keywords": [
     "jest",
