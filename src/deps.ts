@@ -1,6 +1,6 @@
 import { execSync } from "node:child_process";
 
-const JEST_DEPS_LIST = ["jest", "ts-jest", "@types/jest", "@jest/globals", "babel-jest", "svelte-jester"];
+const JEST_DEPS_LIST = ["jest", "ts-jest", "@types/jest", "@jest/globals", "babel-jest", "svelte-jester", "@swc/jest"];
 
 const MANAGER_COMMAND_MAP = {
   npm: {
