@@ -1,6 +1,17 @@
 import { execSync } from "node:child_process";
 
-const JEST_DEPS_LIST = ["jest", "ts-jest", "@types/jest", "@jest/globals", "babel-jest", "svelte-jester", "@swc/jest"];
+import type { UserConfig } from "vitest/config";
+import type { ScriptTransformationResult } from "./scripts";
+
+const JEST_DEPS_LIST = [
+  "jest",
+  "ts-jest",
+  "@types/jest",
+  "@jest/globals",
+  "babel-jest",
+  "svelte-jester",
+  "@swc/jest",
+];
 
 const MANAGER_COMMAND_MAP = {
   npm: {
@@ -21,28 +32,41 @@ const MANAGER_COMMAND_MAP = {
   },
 };
 
-export function installVitest(
-  manager: "npm" | "yarn" | "pnpm" | "bun",
-  packages: string[],
-) {
-  const shouldSkip = packages.includes("vitest");
-  if (!shouldSkip) {
-    execSync(`${manager} ${MANAGER_COMMAND_MAP[manager].install} -D vitest`);
+export function getNeededPackages(packages: string[], script: ScriptTransformationResult, config: UserConfig["test"]) {
+  const neededPackages = [];
+  if (!packages.includes("vitest")) {
+    neededPackages.push("vitest");
   }
+
+  if ((script.coverage || config?.coverage?.enabled) && !packages.includes("@vitest/coverage-8")) {
+    neededPackages.push("@vitest/coverage-8");
+  }
+
+  return neededPackages;
 }
 
-export function removeJestDeps(
-  manager: "npm" | "yarn" | "pnpm" | "bun",
+export function getRemovedPackages(
   packages: string[],
 ): string[] {
-  const toBeUninstalled = JEST_DEPS_LIST.filter((dep) =>
+  return JEST_DEPS_LIST.filter((dep) =>
     packages.includes(dep),
   );
-  if (toBeUninstalled.length) {
-    execSync(
-      `${manager} ${MANAGER_COMMAND_MAP[manager].remove} ${toBeUninstalled.join(" ")}`,
-    );
-  }
+}
 
-  return toBeUninstalled;
+export function install(
+  manager: "npm" | "yarn" | "pnpm" | "bun",
+  deps: string[],
+) {
+  execSync(
+    `${manager} ${MANAGER_COMMAND_MAP[manager].install} -D ${deps.join(" ")}`,
+  );
+}
+
+export function uninstall(
+  manager: "npm" | "yarn" | "pnpm" | "bun",
+  deps: string[],
+) {
+  execSync(
+    `${manager} ${MANAGER_COMMAND_MAP[manager].remove} -D ${deps.join(" ")}`,
+  );
 }

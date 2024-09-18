@@ -11,7 +11,7 @@ import color from "picocolors";
 
 import { Logger } from "./logger";
 
-import { installVitest, removeJestDeps } from "./deps";
+import { getNeededPackages, getRemovedPackages } from "./deps";
 import { formatSetupFile, formatVitestConfig } from "./formatter";
 import { getJestConfig } from "./jest";
 import { transformJestConfigToVitest } from "./mapper";
@@ -87,8 +87,7 @@ try {
   }
 
   const packageJsonPath = resolve(process.cwd(), "package.json");
-
-  if (existsSync(packageJsonPath) && !args.options.dryRun) {
+  if (existsSync(packageJsonPath)) {
     Logger.debug("package.json found. Jest scripts will be transformed.");
 
     spinner.text = color.green("Transforming package's scripts...\n");
@@ -101,21 +100,26 @@ try {
     ];
 
     const newScripts = transformJestScriptsToVitest(packageJson.scripts);
+    setupFile = constructDOMCleanupFile(vitestConfig, dependencies);
+
+    getNeededPackages(packageManager, dependencies);
+
+    const uninstalled = getRemovedPackages(packageManager, dependencies);
+  }
+
+  if (existsSync(packageJsonPath) &&) {
+
     packageJson.scripts = newScripts;
 
     writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2));
 
     Logger.debug("package.json scripts rewritten");
 
-    setupFile = constructDOMCleanupFile(vitestConfig, dependencies);
+
 
     spinner.text = color.green("Performing dependency cleanup...\n");
 
-    installVitest(packageManager, dependencies);
 
-    Logger.debug("Vitest successfully installed");
-
-    const uninstalled = removeJestDeps(packageManager, dependencies);
 
     if (uninstalled.length) {
       Logger.debug(`Successfully uninstalled ${uninstalled.join(", ")}`);

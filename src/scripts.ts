@@ -1,4 +1,4 @@
-import { parseCLI } from '@namchee/parsley';
+import { parseCLI } from "@namchee/parsley";
 
 type VitestCLIOption = {
   // Vitest equivalent command. If not present, it will use the exact same command
@@ -14,73 +14,71 @@ const SEPARATOR_PATTERN = /\s+([&|>]+)\s+/gm;
 const JEST_CLI_MAP: Record<string, VitestCLIOption> = {
   bail: {},
   changedFilesWithAncestor: {
-    flag: 'changed',
-    value: 'HEAD~1',
+    flag: "changed",
+    value: "HEAD~1",
   },
   changedSince: {
-    flag: 'changed',
+    flag: "changed",
   },
   config: {},
   c: {},
-  coverage: {
-    flag: 'coverage.enabled',
-  },
+  coverage: {},
   collectCoverage: {
-    flag: 'coverage.enabled',
+    flag: "coverage.enabled",
   },
   collectCoverageFrom: {
-    flag: 'coverage.include',
+    flag: "coverage.include",
   },
   coverageDirectory: {
-    flag: 'coverage.reportsDirectory',
+    flag: "coverage.reportsDirectory",
   },
   env: {
-    flag: 'environment',
+    flag: "environment",
   },
   expand: {
-    flag: 'expandSnapshotDiff',
+    flag: "expandSnapshotDiff",
   },
   injectGlobals: {
-    flag: 'globals',
+    flag: "globals",
   },
   json: {},
   lastCommit: {
-    flag: 'changed',
-    value: 'HEAD~1',
+    flag: "changed",
+    value: "HEAD~1",
   },
   logHeapUsage: {},
   maxConcurrency: {},
   maxWorkers: {},
   noStackTrace: {
-    flag: 'printConsoleTrace',
-    value: 'false'
+    flag: "printConsoleTrace",
+    value: "false",
   },
   onlyChanged: {
-    flag: 'changed',
-    value: 'HEAD~1'
+    flag: "changed",
+    value: "HEAD~1",
   },
   outputFile: {},
   passWithNoTests: {},
   randomize: {
-    flag: 'sequence.shuffle.tests'
+    flag: "sequence.shuffle.tests",
   },
   seed: {
-    flag: 'sequence.seed'
+    flag: "sequence.seed",
   },
   reporters: {
-    flag: 'coverage.reporter',
+    flag: "coverage.reporter",
     multi: true,
   },
   roots: {
-    flag: 'root',
+    flag: "root",
     multi: true,
   },
   runInBand: {
-    flag: 'sequence.concurrent',
-    value: 'false',
+    flag: "sequence.concurrent",
+    value: "false",
   },
   selectProjects: {
-    flag: 'project',
+    flag: "project",
     multi: true,
   },
   shard: {},
@@ -88,39 +86,40 @@ const JEST_CLI_MAP: Record<string, VitestCLIOption> = {
   testNamePattern: {},
   t: {},
   testPathIgnorePatterns: {
-    flag: 'exclude',
+    flag: "exclude",
     multi: true,
   },
   testTimeout: {},
   updateSnaphot: {
-    flag: 'update',
+    flag: "update",
   },
   watch: {},
 };
 
-type ScriptTransformationResult = {
+export type ScriptTransformationResult = {
   commands: Record<string, string>;
   modified: string[];
-}
+  coverage: boolean;
+};
 
 function separateMultiValue(key: string, value: string[]): string {
   const commands = [];
   const vitestCLI = JEST_CLI_MAP[key] as VitestCLIOption;
   const newFlag = vitestCLI.flag ?? key;
 
-  const prefix = newFlag.length === 1 ? '-' : '--';
+  const prefix = newFlag.length === 1 ? "-" : "--";
 
   for (const val of value) {
     commands.push(`${prefix}${newFlag} ${val}`);
   }
 
-  return commands.join(' ');
+  return commands.join(" ");
 }
 
 function extractFlag(flag: string, value: string[]): string[] {
   const newFlags = [];
 
-  const prefix = flag.length === 1 ? '-' : '--';
+  const prefix = flag.length === 1 ? "-" : "--";
 
   if (value.length) {
     for (const val of value) {
@@ -158,20 +157,23 @@ function convertCommandToVitestScript(command: string): string {
     }
   }
 
-  const tokens = ['vitest'];
+  const tokens = ["vitest"];
   if (args.length) {
-    tokens.push(args.join(' '));
+    tokens.push(args.join(" "));
   }
 
   if (newFlags.length) {
-    tokens.push(newFlags.join(' '));
+    tokens.push(newFlags.join(" "));
   }
 
-  return tokens.join(' ');
+  return tokens.join(" ");
 }
 
-export function transformJestScriptsToVitest(scripts: Record<string, string>): ScriptTransformationResult {
+export function transformJestScriptsToVitest(
+  scripts: Record<string, string>,
+): ScriptTransformationResult {
   const newScripts: Record<string, string> = {};
+  let coverage = false;
   const modified: string[] = [];
 
   for (const [script, value] of Object.entries(scripts)) {
@@ -187,7 +189,7 @@ export function transformJestScriptsToVitest(scripts: Record<string, string>): S
       }
     }
 
-    let newCommand = '';
+    let newCommand = "";
 
     while (commands.length) {
       newCommand += commands.shift();
@@ -197,6 +199,9 @@ export function transformJestScriptsToVitest(scripts: Record<string, string>): S
     }
 
     newScripts[script] = newCommand.trim();
+    if (/--coverage/.test(newCommand)) {
+      coverage = true;
+    }
   }
 
   if (!modified.length) {
@@ -207,5 +212,6 @@ export function transformJestScriptsToVitest(scripts: Record<string, string>): S
   return {
     commands: newScripts,
     modified: [...new Set(modified)],
-  }
+    coverage,
+  };
 }
