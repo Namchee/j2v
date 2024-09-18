@@ -98,6 +98,11 @@ const JEST_CLI_MAP: Record<string, VitestCLIOption> = {
   watch: {},
 };
 
+type ScriptTransformationResult = {
+  commands: Record<string, string>;
+  modified: string[];
+}
+
 function separateMultiValue(key: string, value: string[]): string {
   const commands = [];
   const vitestCLI = JEST_CLI_MAP[key] as VitestCLIOption;
@@ -165,9 +170,9 @@ function convertCommandToVitestScript(command: string): string {
   return tokens.join(' ');
 }
 
-export function transformJestScriptsToVitest(scripts: Record<string, string>): Record<string, string> {
+export function transformJestScriptsToVitest(scripts: Record<string, string>): ScriptTransformationResult {
   const newScripts: Record<string, string> = {};
-  let hasJest = false;
+  const modified: string[] = [];
 
   for (const [script, value] of Object.entries(scripts)) {
     const commands = value.split(SEPARATOR_PATTERN);
@@ -176,7 +181,8 @@ export function transformJestScriptsToVitest(scripts: Record<string, string>): R
       const trimmedCommand = commands[idx]?.trim() as string;
 
       if (isJestCommand(trimmedCommand)) {
-        hasJest = true;
+        modified.push(script);
+
         commands[idx] = convertCommandToVitestScript(trimmedCommand);
       }
     }
@@ -193,9 +199,13 @@ export function transformJestScriptsToVitest(scripts: Record<string, string>): R
     newScripts[script] = newCommand.trim();
   }
 
-  if (!hasJest) {
+  if (!modified.length) {
     newScripts["test:vitest"] = "vitest";
+    modified.push("test:vitest");
   }
 
-  return newScripts;
+  return {
+    commands: newScripts,
+    modified: [...new Set(modified)],
+  }
 }
