@@ -11,6 +11,7 @@ const JEST_DEPS_LIST = [
   "babel-jest",
   "svelte-jester",
   "@swc/jest",
+  "eslint-plugin-jest",
 ];
 
 const MANAGER_COMMAND_MAP = {

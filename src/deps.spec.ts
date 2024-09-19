@@ -1,6 +1,11 @@
-import * as cp from "node:child_process";
 
-import { type MockInstance, afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+import {
+  describe,
+  expect,
+  it,
+  vi,
+} from "vitest";
 
 import { getNeededPackages, getRemovedPackages } from "./deps";
 
@@ -11,79 +16,81 @@ vi.mock("node:child_process", () => {
 });
 
 describe("installVitest", () => {
-  let execSpy: MockInstance;
+  const defaultConfig = {
+    coverage: {
+      enabled: false,
+    },
+  };
 
-  beforeEach(() => {
-    execSpy = vi.spyOn(cp, "execSync");
+  it('should return ["vitest"] when "vitest" is not in packages', () => {
+    const packages = ["some-other-package"];
+    const script = { coverage: false, commands: {}, modified: [] };
+    const result = getNeededPackages(packages, script, defaultConfig);
+    expect(result).toEqual(["vitest"]);
   });
 
-  afterEach(() => {
-    vi.restoreAllMocks();
+  it('should not return "vitest" when "vitest" is already in packages', () => {
+    const packages = ["vitest"];
+    const script = { coverage: false, commands: {}, modified: [] };
+    const result = getNeededPackages(packages, script, defaultConfig);
+    expect(result).toEqual([]);
   });
 
-  it("should install vitest with npm", () => {
-    getNeededPackages("npm", []);
-
-    expect(execSpy).toHaveBeenCalledWith("npm install -D vitest");
+  it('should return "@vitest/coverage-8" when coverage is enabled in script and not in packages', () => {
+    const packages = ["vitest"];
+    const script = { coverage: true, commands: {}, modified: [] };
+    const result = getNeededPackages(packages, script, defaultConfig);
+    expect(result).toEqual(["@vitest/coverage-8"]);
   });
 
-  it("should install vitest with pnpm", () => {
-    getNeededPackages("pnpm", []);
-
-    expect(execSpy).toHaveBeenCalledWith("pnpm add -D vitest");
+  it('should return "@vitest/coverage-8" when coverage is enabled in config and not in packages', () => {
+    const packages = ["vitest"];
+    const script = { coverage: false, commands: {}, modified: [] };
+    const config = {
+      coverage: {
+        enabled: true,
+      },
+    };
+    const result = getNeededPackages(packages, script, config);
+    expect(result).toEqual(["@vitest/coverage-8"]);
   });
 
-  it("should install vitest with yarn", () => {
-    getNeededPackages("yarn", []);
-
-    expect(execSpy).toHaveBeenCalledWith("yarn add -D vitest");
+  it('should return both "vitest" and "@vitest/coverage-8" when neither are in packages, and coverage is enabled', () => {
+    const packages = ["some-other-package"];
+    const script = { coverage: true, commands: {}, modified: [] };
+    const config = {
+      coverage: {
+        enabled: true,
+      },
+    };
+    const result = getNeededPackages(packages, script, config);
+    expect(result).toEqual(["vitest", "@vitest/coverage-8"]);
   });
 
-  it("should install vitest with bun", () => {
-    getNeededPackages("bun", []);
-
-    expect(execSpy).toHaveBeenCalledWith("bun install -D vitest");
-  });
-
-  it("should not install vitest if its already exists", () => {
-    getNeededPackages("npm", ["vitest"]);
-
-    expect(execSpy).not.toHaveBeenCalled();
+  it('should return an empty array when both "vitest" and "@vitest/coverage-8" are in packages', () => {
+    const packages = ["vitest", "@vitest/coverage-8"];
+    const script = { coverage: true, commands: {}, modified: [] };
+    const result = getNeededPackages(packages, script, defaultConfig);
+    expect(result).toEqual([]);
   });
 });
 
-describe("removeJestDeps", () => {
-  let execSpy: MockInstance;
-
-  beforeEach(() => {
-    execSpy = vi.spyOn(cp, "execSync");
+describe("getRemovedPackages", () => {
+  it("should return an empty array when there are no packages", () => {
+    const packages: string[] = [];
+    const result = getRemovedPackages(packages);
+    expect(result).toEqual([]);
   });
 
-  afterEach(() => {
-    vi.restoreAllMocks();
+  it("should return some old jest dependencies", () => {
+    const packages: string[] = ["jest", "@types/jest", "@jest/globals", "fake-jest"];
+    const result = getRemovedPackages(packages);
+    expect(result).toEqual(["jest", "@types/jest", "@jest/globals"]);
   });
 
-  it("should uninstall jest core deps", () => {
-    getRemovedPackages("npm", ["jest"]);
-
-    expect(execSpy).toHaveBeenCalledWith("npm uninstall jest");
-  });
-
-  it("should uninstall jest with typescript", () => {
-    getRemovedPackages("npm", ["jest", "ts-jest", "@types/jest", "@jest/globals"]);
-
-    expect(execSpy).toHaveBeenCalledWith("npm uninstall jest ts-jest @types/jest @jest/globals");
-  });
-
-  it("should uninstall svelte-jester", () => {
-    getRemovedPackages("npm", ["jest", "ts-jest", "@types/jest", "@jest/globals", "svelte-jester"]);
-
-    expect(execSpy).toHaveBeenCalledWith("npm uninstall jest ts-jest @types/jest @jest/globals svelte-jester");
-  });
-
-  it("should not uninstall anything as jest doesn't exist", () => {
-    getRemovedPackages("npm", ["vitest"]);
-
-    expect(execSpy).not.toHaveBeenCalled();
+  it("should return ts-jest", () => {
+    const packages: string[] = ["jest", "ts-jest"];
+    const result = getRemovedPackages(packages);
+    expect(result).toEqual(["jest", "ts-jest"]);
   });
 });
