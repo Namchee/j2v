@@ -11,8 +11,13 @@ describe("transformJestScriptToVitest", () => {
     const transformed = transformJestScriptsToVitest(scripts);
 
     expect(transformed).toStrictEqual({
-      start: 'node index.js',
-      "test:vitest": "vitest"
+      commands: {
+        start: 'node index.js',
+        "test:vitest": "vitest"
+      },
+      coverage: false,
+      modified: ["test:vitest"],
+
     });
   });
 
@@ -26,9 +31,13 @@ describe("transformJestScriptToVitest", () => {
     const transformed = transformJestScriptsToVitest(scripts);
 
     expect(transformed).toStrictEqual({
-      start: 'node index.js',
-      "test": "vitest",
-      "test:integration": "vitest tests/integrations/**.spec.ts",
+      commands: {
+        start: 'node index.js',
+        "test": "vitest",
+        "test:integration": "vitest tests/integrations/**.spec.ts",
+      },
+      coverage: false,
+      modified: ["test", "test:integration"],
     });
   });
 
@@ -41,8 +50,12 @@ describe("transformJestScriptToVitest", () => {
     const transformed = transformJestScriptsToVitest(scripts);
 
     expect(transformed).toStrictEqual({
-      start: 'node index.js',
-      "test": "vitest src/a/**.spec.ts & vitest src/b/**.test.ts && vitest dist/c/*.ts",
+      commands: {
+        start: 'node index.js',
+        "test": "vitest src/a/**.spec.ts & vitest src/b/**.test.ts && vitest dist/c/*.ts",
+      },
+      coverage: false,
+      modified: ["test"],
     });
   });
 
@@ -55,8 +68,12 @@ describe("transformJestScriptToVitest", () => {
     const transformed = transformJestScriptsToVitest(scripts);
 
     expect(transformed).toStrictEqual({
-      start: 'node index.js',
-      "test": "vitest src/a/**.spec.ts src/b/**.test.ts",
+      commands: {
+        start: 'node index.js',
+        "test": "vitest src/a/**.spec.ts src/b/**.test.ts",
+      },
+      coverage: false,
+      modified: ["test"],
     });
   });
 
@@ -69,8 +86,12 @@ describe("transformJestScriptToVitest", () => {
     const transformed = transformJestScriptsToVitest(scripts);
 
     expect(transformed).toStrictEqual({
-      start: 'node index.js',
-      "test": "vitest src/a/**.spec.ts --bail --silent",
+      commands: {
+        start: 'node index.js',
+        "test": "vitest src/a/**.spec.ts --bail --silent",
+      },
+      coverage: false,
+      modified: ["test"],
     });
   });
 
@@ -83,8 +104,12 @@ describe("transformJestScriptToVitest", () => {
     const transformed = transformJestScriptsToVitest(scripts);
 
     expect(transformed).toStrictEqual({
-      start: 'node index.js',
-      "test": "vitest --project a --project b --project c",
+      commands: {
+        start: 'node index.js',
+        "test": "vitest --project a --project b --project c",
+      },
+      coverage: false,
+      modified: ["test"],
     });
   });
 
@@ -97,8 +122,12 @@ describe("transformJestScriptToVitest", () => {
     const transformed = transformJestScriptsToVitest(scripts);
 
     expect(transformed).toStrictEqual({
-      start: 'node index.js',
-      "test": "vitest --changed HEAD~1",
+      commands: {
+        start: 'node index.js',
+        "test": "vitest --changed HEAD~1",
+      },
+      coverage: false,
+      modified: ["test"],
     });
   });
 
@@ -111,8 +140,12 @@ describe("transformJestScriptToVitest", () => {
     const transformed = transformJestScriptsToVitest(scripts);
 
     expect(transformed).toStrictEqual({
-      start: 'node index.js',
-      "test": "vitest -c",
+      commands: {
+        start: 'node index.js',
+        "test": "vitest -c",
+      },
+      coverage: false,
+      modified: ["test"],
     });
   });
 
@@ -125,8 +158,12 @@ describe("transformJestScriptToVitest", () => {
     const transformed = transformJestScriptsToVitest(scripts);
 
     expect(transformed).toStrictEqual({
-      start: 'node index.js',
-      "test": "vitest --coverage.enabled",
+      commands: {
+        start: 'node index.js',
+        "test": "vitest --coverage.enabled",
+      },
+      coverage: true,
+      modified: ["test"],
     });
   });
 });
