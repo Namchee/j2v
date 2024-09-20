@@ -1,4 +1,4 @@
-import type { CallExpression, } from "ts-morph";
+import type { CallExpression } from "ts-morph";
 
 import { getChainedExpressionCalls } from "../chain";
 import test from "./test";
@@ -8,7 +8,9 @@ export default function (expr: CallExpression): string {
 
   const properties = getChainedExpressionCalls(expr);
 
-  expr.setExpression(`it.only.${properties.slice(1).map(p => p.getText()).join('.')}`);
+  const tokens = ["it", "only", ...properties.slice(1).map((p) => p.getText())];
+
+  expr.setExpression(tokens.join("."));
 
   return "it";
 }
