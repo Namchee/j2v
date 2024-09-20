@@ -21,8 +21,10 @@ export default function (expr: CallExpression): string {
 
   const body = actualTest?.getBody().getText();
 
+  const restOfArgs = params.slice(0, -1);
+
   actualTest?.replaceWithText(
-    `() => new Promise((${params.map((p) => p.getText()).join(", ")}) => ${body} )`,
+    `(${restOfArgs.map(arg => arg.getText()).join(', ')}) => new Promise((${params[params.length - 1]?.getText()}) => ${body} )`,
   );
 
   return "test";

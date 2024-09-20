@@ -1,4 +1,12 @@
 {
 	"$schema": "https://biomejs.dev/schemas/1.8.2/schema.json",
-	"extends": ["node_modules/@namchee/biome-config/biome.json"]
+	"extends": ["node_modules/@namchee/biome-config/biome.json"],
+
+  "linter": {
+    "rules": {
+      "style": {
+        "useImportType": "off"
+      }
+    }
+  }
 }
