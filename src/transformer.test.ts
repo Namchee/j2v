@@ -12,7 +12,7 @@ const readFile = promisify(readFileCb);
 
 describe("transformJestToVitest", () => {
   const givenInput = globSync(["fixtures/**/*.in.ts"], {
-    ignore: ["fixtures/global.(in|out).ts"],
+    ignore: ["fixtures/global.(in|out).(j|t)sx?"],
   });
 
   beforeAll(() => {
