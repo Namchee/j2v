@@ -1,13 +1,6 @@
-import { beforeEach } from 'vitest';
-
-function setActivePinia(_pinia) {
-  // dummy
-}
-
-function createTestingPinia() {
-  return 1;
-}
+import * as fs from 'node:fs';
+import { beforeEach, vi } from 'vitest';
 
 beforeEach(() => {
-  setActivePinia(createTestingPinia());
+  vi.spyOn(fs, 'existsSync').mockReturnValue(false);
 });

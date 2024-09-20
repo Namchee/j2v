@@ -1,9 +1,3 @@
-function setActivePinia(_pinia) {
-  // dummy
-}
+import * as fs from 'node:fs';
 
-function createTestingPinia() {
-  return 1;
-}
-
-beforeEach(() => setActivePinia(createTestingPinia()));
+beforeEach(() => jest.spyOn(fs, 'existsSync').mockReturnValue(false));
