@@ -12,5 +12,5 @@ export default function (expr: CallExpression): string {
 
   expr.setExpression(tokens.join("."));
 
-  return "it";
+  return "test";
 }
