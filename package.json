@@ -9,7 +9,7 @@
   "scripts": {
     "test": "vitest watch",
     "lint": "biome",
-    "build": "tsup src/config.ts --format esm",
+    "build": "tsup src/main.ts --format esm --minify",
     "list": "vitest list"
   },
   "keywords": [
