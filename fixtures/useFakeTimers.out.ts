@@ -1,4 +1,4 @@
-import { test, vi, expect } from 'vitest';
+import { expect, test, vi } from 'vitest';
 
 test('example test using jest fake timers with multiple arguments', () => {
   vi.useFakeTimers({

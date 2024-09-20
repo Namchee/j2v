@@ -1,4 +1,4 @@
-import { vi, test, expect } from 'vitest';
+import { expect, test, vi } from 'vitest';
 
 const filesystem = await vi.importMock<typeof import('fs')>('fs');
 

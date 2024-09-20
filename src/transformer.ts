@@ -160,7 +160,7 @@ export function transformJestTestToVitest(
 
     if (!config?.globals && api.length) {
       source.addImportDeclaration({
-        namedImports: [...new Set(api)],
+        namedImports: [...new Set(api)].sort(),
         moduleSpecifier: "vitest",
       });
     }
@@ -170,7 +170,7 @@ export function transformJestTestToVitest(
         namedImports: types.map((importName) => ({
           name: importName,
           isTypeOnly: true,
-        })),
+        })).sort(),
         moduleSpecifier: "vitest",
       });
     }

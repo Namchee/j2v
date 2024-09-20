@@ -1,5 +1,5 @@
 import * as fs from 'node:fs';
-import { vi, test, expect } from 'vitest';
+import { expect, test, vi } from 'vitest';
 
 vi.mock('node:fs');
 
