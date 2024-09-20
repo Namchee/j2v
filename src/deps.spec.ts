@@ -7,7 +7,9 @@ import {
   vi,
 } from "vitest";
 
-import { getNeededPackages, getRemovedPackages } from "./deps";
+import * as cp from "node:child_process";
+
+import { getNeededPackages, getRemovedPackages, install, uninstall } from "./deps";
 
 vi.mock("node:child_process", () => {
   return {
@@ -94,3 +96,23 @@ describe("getRemovedPackages", () => {
     expect(result).toEqual(["jest", "ts-jest"]);
   });
 });
+
+describe("install", () => {
+  it("should run execSync with provided deps", () => {
+    const spy = vi.spyOn(cp, "execSync");
+
+    install("npm", ["vitest"]);
+
+    expect(spy).toHaveBeenCalledWith("npm install -D vitest");
+  });
+});
+
+describe("uninstall", () => {
+  it("should run execSync with provided deps", () => {
+    const spy = vi.spyOn(cp, "execSync");
+
+    uninstall("yarn", ["jest", "@types/jest", "@jest/globals"]);
+
+    expect(spy).toHaveBeenCalledWith("yarn remove jest @types/jest @jest/globals");
+  });
+})

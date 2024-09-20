@@ -68,6 +68,6 @@ export function uninstall(
   deps: string[],
 ) {
   execSync(
-    `${manager} ${MANAGER_COMMAND_MAP[manager].remove} -D ${deps.join(" ")}`,
+    `${manager} ${MANAGER_COMMAND_MAP[manager].remove} ${deps.join(" ")}`,
   );
 }
