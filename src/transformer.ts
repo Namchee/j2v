@@ -197,6 +197,8 @@ export function transformJestTestToVitest(
   testFiles: TestFile[],
   config: UserConfig["test"],
 ): TestFile[] {
+  const transformedFiles: TestFile[] = [];
+
   const project = new Project({
     manipulationSettings: getManipulationSettings(testFiles),
   });
@@ -282,7 +284,11 @@ export function transformJestTestToVitest(
     source.formatText({
       ensureNewLineAtEndOfFile: true,
     });
-    file.content = source.getFullText();
+    transformedFiles.push({
+      path: file.path,
+      content: source.getFullText()
+    });
+
     source.forget();
 
     Logger.debug(`Test file ${file.path} transformed successfully`);
