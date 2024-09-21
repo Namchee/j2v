@@ -1,6 +1,7 @@
 import {
   type CallExpression,
   IndentationText,
+  type ManipulationSettings,
   Project,
   QuoteKind,
   ScriptKind,
@@ -111,6 +112,15 @@ function removeJestImports(source: SourceFile) {
   }
 }
 
+function getManipulationSettings(testFiles: TestFile[]): Partial<ManipulationSettings> {
+  const source = new Project().createSourceFile("", testFiles[0]?.content);
+
+  return {
+    indentationText: getIndentation(source),
+    quoteKind: getQuote(source),
+  };
+}
+
 function getIndentation(source: SourceFile): IndentationText {
   const lines = source.getFullText().split("\n");
 
@@ -122,15 +132,11 @@ function getIndentation(source: SourceFile): IndentationText {
         return IndentationText.Tab;
       }
 
-      if (leadingSpaces?.length === 2) {
-        return IndentationText.TwoSpaces;
-      }
-
-      if (leadingSpaces?.length === 4) {
-        return IndentationText.FourSpaces;
-      }
-
-      return IndentationText.EightSpaces;
+      switch (leadingSpaces?.length) {
+        case 2: return IndentationText.TwoSpaces;
+        case 4: return IndentationText.FourSpaces;
+        case 8: return IndentationText.EightSpaces;
+      };
     }
   }
 
@@ -179,7 +185,9 @@ export function transformJestTestToVitest(
   testFiles: TestFile[],
   config: UserConfig["test"],
 ): TestFile[] {
-  const project = new Project();
+  const project = new Project({
+    manipulationSettings: getManipulationSettings(testFiles),
+  });
 
   for (const file of testFiles) {
     Logger.debug(`Transforming ${file.path}`);
