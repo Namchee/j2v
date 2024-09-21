@@ -7,7 +7,8 @@
     "j2v": "./dist/main.js"
   },
   "scripts": {
-    "test": "vitest watch",
+    "test": "vitest",
+    "test:coverage": "vitest --coverage",
     "lint": "biome",
     "build": "tsup src/main.ts --format esm --minify",
     "list": "vitest list"
@@ -29,9 +30,10 @@
     "@namchee/biome-config": "^1.0.1",
     "@types/jest": "^29.5.12",
     "@types/node": "^20.14.12",
+    "@vitest/coverage-v8": "^2.1.1",
     "tsup": "^8.2.3",
     "typescript": "^5.5.4",
-    "vitest": "^2.0.4"
+    "vitest": "^2.1.1"
   },
   "dependencies": {
     "@namchee/parsley": "^1.0.1",
