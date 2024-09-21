@@ -3,6 +3,7 @@ import {
   IndentationText,
   Project,
   QuoteKind,
+  ScriptKind,
   type SourceFile,
   type StringLiteral,
   SyntaxKind,
@@ -16,10 +17,14 @@ import { JEST_UTILITIES } from "./transformer/utils";
 
 import { Logger } from "./logger";
 
+import { extname } from "node:path";
 import type { UserConfig } from "vitest/config";
 import type { TestFile } from "./fs";
 
-export type CallExpressionReplacer = (expr: CallExpression, source: SourceFile) => string;
+export type CallExpressionReplacer = (
+  expr: CallExpression,
+  source: SourceFile,
+) => string;
 
 function transformCallExpression(
   callExpr: CallExpression,
@@ -28,7 +33,9 @@ function transformCallExpression(
   const propertyChain = getChainedExpressionCalls(callExpr);
 
   if (propertyChain[0] && JEST_GLOBALS[propertyChain[0].getText()]) {
-    const mappedProp = JEST_GLOBALS[propertyChain[0].getText()] as CallExpressionReplacer;
+    const mappedProp = JEST_GLOBALS[
+      propertyChain[0].getText()
+    ] as CallExpressionReplacer;
 
     return mappedProp(callExpr, source);
   }
@@ -36,7 +43,10 @@ function transformCallExpression(
   return transformJestAPI(callExpr, source);
 }
 
-function transformJestAPI(callExpr: CallExpression, source: SourceFile): string | undefined {
+function transformJestAPI(
+  callExpr: CallExpression,
+  source: SourceFile,
+): string | undefined {
   const propertyExpr = callExpr.getFirstChildIfKind(
     SyntaxKind.PropertyAccessExpression,
   );
@@ -65,7 +75,9 @@ function transformJestAPI(callExpr: CallExpression, source: SourceFile): string 
   );
 }
 
-function transformTypeReference(typeRef: TypeReferenceNode): string | undefined {
+function transformTypeReference(
+  typeRef: TypeReferenceNode,
+): string | undefined {
   const typeName = typeRef.getTypeName();
   const namespace = typeName.getFirstChild()?.getText();
   const typeProp = typeName.getLastChild()?.getText() as string;
@@ -99,23 +111,83 @@ function removeJestImports(source: SourceFile) {
   }
 }
 
+function getIndentation(source: SourceFile): IndentationText {
+  const lines = source.getFullText().split("\n");
+
+  for (const line of lines) {
+    const trimmedLine = line.trim();
+    if (trimmedLine.length) {
+      const leadingSpaces = /^\s+/.exec(trimmedLine);
+      if (leadingSpaces?.includes("\t")) {
+        return IndentationText.Tab;
+      }
+
+      if (leadingSpaces?.length === 2) {
+        return IndentationText.TwoSpaces;
+      }
+
+      if (leadingSpaces?.length === 4) {
+        return IndentationText.FourSpaces;
+      }
+
+      return IndentationText.EightSpaces;
+    }
+  }
+
+  return IndentationText.TwoSpaces;
+}
+
+function getQuote(source: SourceFile): QuoteKind {
+  const stringSample = source.getFirstDescendantByKind(
+    SyntaxKind.StringLiteral,
+  );
+  if (!stringSample) {
+    return QuoteKind.Single;
+  }
+
+  return stringSample.getText().startsWith('"')
+    ? QuoteKind.Double
+    : QuoteKind.Single;
+}
+
+function getScriptKind(path: string): ScriptKind {
+  const ext = extname(path);
+
+  switch (ext) {
+    case ".js":
+      return ScriptKind.JS;
+    case ".cjs":
+      return ScriptKind.JS;
+    case ".mjs":
+      return ScriptKind.JS;
+    case ".jsx":
+      return ScriptKind.JSX;
+    case ".ts":
+      return ScriptKind.TS;
+    case ".cts":
+      return ScriptKind.TS;
+    case ".mts":
+      return ScriptKind.TS;
+    case ".tsx":
+      return ScriptKind.TSX;
+    default:
+      return ScriptKind.Unknown;
+  }
+}
+
 export function transformJestTestToVitest(
   testFiles: TestFile[],
   config: UserConfig["test"],
 ): TestFile[] {
-  const project = new Project({
-    manipulationSettings: {
-      indentationText: IndentationText.TwoSpaces,
-      insertSpaceAfterOpeningAndBeforeClosingNonemptyBraces: true,
-      quoteKind: QuoteKind.Single,
-      useTrailingCommas: true,
-    },
-  });
+  const project = new Project();
 
   for (const file of testFiles) {
     Logger.debug(`Transforming ${file.path}`);
 
-    const source = project.createSourceFile(file.path, file.content, { overwrite: true });
+    const source = project.createSourceFile(file.path, file.content, {
+      overwrite: true,
+      scriptKind: getScriptKind(file.path),
+    });
 
     const types: string[] = [];
     const api: string[] = [];
@@ -123,7 +195,10 @@ export function transformJestTestToVitest(
     source.forEachDescendant((node) => {
       switch (node.getKind()) {
         case SyntaxKind.CallExpression: {
-          const apiCall = transformCallExpression(node as CallExpression, source);
+          const apiCall = transformCallExpression(
+            node as CallExpression,
+            source,
+          );
 
           if (apiCall) {
             api.push(apiCall);
@@ -167,17 +242,21 @@ export function transformJestTestToVitest(
 
     if (types.length) {
       source.addImportDeclaration({
-        namedImports: types.map((importName) => ({
-          name: importName,
-          isTypeOnly: true,
-        })).sort(),
+        namedImports: types
+          .map((importName) => ({
+            name: importName,
+            isTypeOnly: true,
+          }))
+          .sort(),
         moduleSpecifier: "vitest",
       });
     }
 
     removeJestImports(source);
 
-    source.formatText();
+    source.formatText({
+      ensureNewLineAtEndOfFile: true,
+    });
     file.content = source.getFullText();
     source.forget();
 
