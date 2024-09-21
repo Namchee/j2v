@@ -18,7 +18,7 @@ import { JEST_UTILITIES } from "./transformer/utils";
 
 import { Logger } from "./logger";
 
-import { extname } from "node:path";
+import { basename, extname } from "node:path";
 import type { UserConfig } from "vitest/config";
 import type { TestFile } from "./fs";
 
@@ -185,6 +185,14 @@ function getScriptKind(path: string): ScriptKind {
   }
 }
 
+function isVitestFile(source: SourceFile): boolean {
+  const importDec = source.getImportDeclaration(
+    (dec) => dec.getModuleSpecifierValue() === "vitest",
+  )
+
+  return !!importDec;
+}
+
 export function transformJestTestToVitest(
   testFiles: TestFile[],
   config: UserConfig["test"],
@@ -200,6 +208,11 @@ export function transformJestTestToVitest(
       overwrite: true,
       scriptKind: getScriptKind(file.path),
     });
+
+    if (isVitestFile(source)) {
+      Logger.debug(`${basename(file.path)} is already a Vitest-compatible file. Skipping...`);
+      continue;
+    }
 
     const types: string[] = [];
     const api: string[] = [];

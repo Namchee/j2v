@@ -254,8 +254,8 @@ if (!args.options.help) {
   } catch (err) {
     const error = err as Error;
 
-    spinner.fail(color.red(`Transformation failed due to ${error.message}\n`));
+    spinner.fail(color.red(error.message));
 
-    Logger.error(error);
+    console.error(error);
   }
 }

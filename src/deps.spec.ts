@@ -38,14 +38,14 @@ describe("installVitest", () => {
     expect(result).toEqual([]);
   });
 
-  it('should return "@vitest/coverage-8" when coverage is enabled in script and not in packages', () => {
+  it('should return "@vitest/coverage-v8" when coverage is enabled in script and not in packages', () => {
     const packages = ["vitest"];
     const script = { coverage: true, commands: {}, modified: [] };
     const result = getNeededPackages(packages, script, defaultConfig);
-    expect(result).toEqual(["@vitest/coverage-8"]);
+    expect(result).toEqual(["@vitest/coverage-v8"]);
   });
 
-  it('should return "@vitest/coverage-8" when coverage is enabled in config and not in packages', () => {
+  it('should return "@vitest/coverage-v8" when coverage is enabled in config and not in packages', () => {
     const packages = ["vitest"];
     const script = { coverage: false, commands: {}, modified: [] };
     const config = {
@@ -54,10 +54,10 @@ describe("installVitest", () => {
       },
     };
     const result = getNeededPackages(packages, script, config);
-    expect(result).toEqual(["@vitest/coverage-8"]);
+    expect(result).toEqual(["@vitest/coverage-v8"]);
   });
 
-  it('should return both "vitest" and "@vitest/coverage-8" when neither are in packages, and coverage is enabled', () => {
+  it('should return both "vitest" and "@vitest/coverage-v8" when neither are in packages, and coverage is enabled', () => {
     const packages = ["some-other-package"];
     const script = { coverage: true, commands: {}, modified: [] };
     const config = {
@@ -66,11 +66,11 @@ describe("installVitest", () => {
       },
     };
     const result = getNeededPackages(packages, script, config);
-    expect(result).toEqual(["vitest", "@vitest/coverage-8"]);
+    expect(result).toEqual(["vitest", "@vitest/coverage-v8"]);
   });
 
-  it('should return an empty array when both "vitest" and "@vitest/coverage-8" are in packages', () => {
-    const packages = ["vitest", "@vitest/coverage-8"];
+  it('should return an empty array when both "vitest" and "@vitest/coverage-v8" are in packages', () => {
+    const packages = ["vitest", "@vitest/coverage-v8"];
     const script = { coverage: true, commands: {}, modified: [] };
     const result = getNeededPackages(packages, script, defaultConfig);
     expect(result).toEqual([]);

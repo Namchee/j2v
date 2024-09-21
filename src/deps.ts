@@ -39,8 +39,8 @@ export function getNeededPackages(packages: string[], script: ScriptTransformati
     neededPackages.push("vitest");
   }
 
-  if ((script.coverage || config?.coverage?.enabled) && !packages.includes("@vitest/coverage-8")) {
-    neededPackages.push("@vitest/coverage-8");
+  if ((script.coverage || config?.coverage?.enabled) && !packages.includes("@vitest/coverage-v8")) {
+    neededPackages.push("@vitest/coverage-v8");
   }
 
   return neededPackages;
@@ -58,16 +58,20 @@ export function install(
   manager: "npm" | "yarn" | "pnpm" | "bun",
   deps: string[],
 ) {
-  execSync(
-    `${manager} ${MANAGER_COMMAND_MAP[manager].install} -D ${deps.join(" ")}`,
-  );
+  if (deps.length) {
+    execSync(
+      `${manager} ${MANAGER_COMMAND_MAP[manager].install} -D ${deps.join(" ")}`,
+    );
+  }
 }
 
 export function uninstall(
   manager: "npm" | "yarn" | "pnpm" | "bun",
   deps: string[],
 ) {
-  execSync(
-    `${manager} ${MANAGER_COMMAND_MAP[manager].remove} ${deps.join(" ")}`,
-  );
+  if (deps.length) {
+    execSync(
+      `${manager} ${MANAGER_COMMAND_MAP[manager].remove} ${deps.join(" ")}`,
+    );
+  }
 }
