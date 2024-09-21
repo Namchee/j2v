@@ -22,7 +22,7 @@ test('example test using jest fake timers with multiple arguments', () => {
       "setTimeout",
       "clearTimeout"
     ],
-    loopLimit: 50,
+    loopLimit: 50
   });
 
   let count = 0;

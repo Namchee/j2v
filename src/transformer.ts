@@ -127,12 +127,16 @@ function getIndentation(source: SourceFile): IndentationText {
   for (const line of lines) {
     const trimmedLine = line.trim();
     if (trimmedLine.length) {
-      const leadingSpaces = /^\s+/.exec(trimmedLine);
+      const leadingSpaces = /^\s+/.exec(line);
+      if (!leadingSpaces) {
+        continue;
+      }
+
       if (leadingSpaces?.includes("\t")) {
         return IndentationText.Tab;
       }
 
-      switch (leadingSpaces?.length) {
+      switch (leadingSpaces[0].length) {
         case 2: return IndentationText.TwoSpaces;
         case 4: return IndentationText.FourSpaces;
         case 8: return IndentationText.EightSpaces;

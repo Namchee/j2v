@@ -1,5 +1,5 @@
-import { vi } from 'vitest';
-import { type Mock } from 'vitest';
+import { vi } from "vitest";
+import { type Mock } from "vitest";
 
 function fn(value: number) {
   return 1 + fn(value - 1);

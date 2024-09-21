@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from "vitest";
 
 describe("sample test", () => {
   it("should log the JEST_WORKER_ID", () => {
