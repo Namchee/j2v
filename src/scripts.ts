@@ -203,9 +203,7 @@ export function transformJestScriptsToVitest(
 
   for (const [script, value] of Object.entries(scripts)) {
     if (isVitestCommand(value)) {
-      newScripts[script] = value;
       hasVitest = true;
-      continue;
     }
 
     const commands = splitAndTrimCommands(value);
@@ -220,8 +218,9 @@ export function transformJestScriptsToVitest(
   }
 
   if (!(modified.size || hasVitest)) {
-    newScripts["test:vitest"] = "vitest";
-    modified.add("test:vitest");
+    const scriptName = newScripts.test ? "test:vitest" : "test";
+    newScripts[scriptName] = "vitest";
+    modified.add(scriptName);
   }
 
   return {

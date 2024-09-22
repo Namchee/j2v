@@ -13,11 +13,29 @@ describe("transformJestScriptToVitest", () => {
     expect(transformed).toStrictEqual({
       commands: {
         start: 'node index.js',
-        "test:vitest": "vitest"
+        test: "vitest"
+      },
+      coverage: false,
+      modified: ["test"],
+    });
+  });
+
+  it("should add 'test:vitest' if 'test' is taken", () => {
+    const scripts = {
+      start: 'node index.js',
+      test: 'idk man',
+    };
+
+    const transformed = transformJestScriptsToVitest(scripts);
+
+    expect(transformed).toStrictEqual({
+      commands: {
+        start: 'node index.js',
+        test: "idk man",
+        "test:vitest": "vitest",
       },
       coverage: false,
       modified: ["test:vitest"],
-
     });
   });
 
