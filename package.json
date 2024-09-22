@@ -10,7 +10,7 @@
     "test": "vitest",
     "lint": "biome lint",
     "build": "tsup src/main.ts --format esm --minify",
-    "release": "pnpm run build && changesets publish"
+    "release": "pnpm run build && changeset publish"
   },
   "keywords": [
     "jest",
