@@ -43,7 +43,7 @@ cli
 const args = cli.parse();
 
 if (!args.options.help) {
-  const spinner = ora(color.green("Finding Jest config...\n"));
+  const spinner = ora(color.green("Finding Jest config...\n"),);
 
   Logger.init(args.options.debug);
 
@@ -173,7 +173,7 @@ if (!args.options.help) {
     }
 
     if (args.options.dryRun) {
-      spinner.succeed(" Dry-run completed successfully.\n");
+      spinner.succeed(color.green("Dry-run completed successfully.\n"));
 
       Logger.info(report.join("\n\n"));
     } else {
@@ -254,11 +254,7 @@ if (!args.options.help) {
       Logger.info(report.join("\n\n"));
       Logger.info("\n");
 
-      spinner.succeed(
-        color.green(
-          `✨ Succesfully converted Jest test suite to Vitest. You're good to Vitest 🚀\n`,
-        ),
-      );
+      spinner.stopAndPersist({ symbol: "✨", text: color.green("Succesfully converted Jest test suite to Vitest. You're good to Vitest 🚀\n") });
     }
   } catch (err) {
     const error = err as Error;
