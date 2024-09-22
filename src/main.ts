@@ -26,6 +26,12 @@ import { transformJestScriptsToVitest } from "./scripts";
 import { type CleanupFile, constructDOMCleanupFile } from "./setup";
 import { transformJestTestToVitest } from "./transformer";
 
+type PackageJSON = {
+  scripts: Record<string, string>;
+  dependencies: Record<string, string>;
+  devDependencies: Record<string, string>;
+};
+
 const cli = cac("j2v");
 cli.help();
 cli.version("0.1.0");
@@ -80,6 +86,7 @@ if (!args.options.help) {
     Logger.debug(`${testFiles.length} test files found.`);
 
     const packageJsonPath = resolve(process.cwd(), "package.json");
+    let packageJson: PackageJSON = {};
     let scripts: string[] = [];
     let installed: string[] = [];
     let uninstalled: string[] = [];
@@ -89,7 +96,7 @@ if (!args.options.help) {
 
       spinner.text = color.green("Transforming package's scripts...\n");
 
-      const packageJson = JSON.parse(readFileSync(packageJsonPath).toString());
+      packageJson = JSON.parse(readFileSync(packageJsonPath).toString());
       const dependencies = [
         ...Object.keys(packageJson.dependencies),
         ...Object.keys(packageJson.devDependencies),
@@ -97,6 +104,8 @@ if (!args.options.help) {
 
       const scriptData = transformJestScriptsToVitest(packageJson.scripts);
       scripts = scriptData.modified;
+      packageJson.scripts = scriptData.commands;
+
       setupFile = constructDOMCleanupFile(vitestConfig, dependencies);
 
       installed = getNeededPackages(dependencies, scriptData, vitestConfig);
@@ -248,6 +257,14 @@ if (!args.options.help) {
         rmSync(path);
 
         Logger.debug("Succesfully removed unnecessary files");
+      }
+
+      spinner.text = color.green("Update package.json scripts...");
+
+      if (existsSync(packageJsonPath)) {
+        writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2));
+
+        Logger.debug("Successfully updated package.json");
       }
 
       Logger.info("");
