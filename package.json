@@ -9,7 +9,8 @@
   "scripts": {
     "test": "vitest",
     "lint": "biome lint",
-    "build": "tsup src/main.ts --format esm --minify"
+    "build": "tsup src/main.ts --format esm --minify",
+    "release": "pnpm run build && changesets publish"
   },
   "keywords": [
     "jest",
