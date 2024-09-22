@@ -136,6 +136,10 @@ function isJestCommand(command: string) {
   return command.match(/^.*jest/);
 }
 
+function isVitestCommand(command: string) {
+  return command.match(/\bvitest\b/);
+}
+
 function convertCommandToVitestScript(command: string): string {
   const newFlags: string[] = [];
   const { args, flags } = parseCLI(command);
@@ -169,49 +173,60 @@ function convertCommandToVitestScript(command: string): string {
   return tokens.join(" ");
 }
 
+function splitAndTrimCommands(value: string): string[] {
+  return value.split(SEPARATOR_PATTERN).map(cmd => cmd.trim());
+}
+
+function transformJestCommands(
+  commands: string[],
+  script: string,
+  modified: Set<string>
+): string[] {
+  return commands.map(command => {
+    if (isJestCommand(command)) {
+      modified.add(script);
+      return convertCommandToVitestScript(command);
+    }
+    return command;
+  });
+}
+
+
 export function transformJestScriptsToVitest(
   scripts: Record<string, string>,
 ): ScriptTransformationResult {
   const newScripts: Record<string, string> = {};
+  const modified: Set<string> = new Set();
+
   let coverage = false;
-  const modified: string[] = [];
+  let hasVitest = false;
 
   for (const [script, value] of Object.entries(scripts)) {
-    const commands = value.split(SEPARATOR_PATTERN);
-
-    for (let idx = 0; idx < commands.length; idx++) {
-      const trimmedCommand = commands[idx]?.trim() as string;
-
-      if (isJestCommand(trimmedCommand)) {
-        modified.push(script);
-
-        commands[idx] = convertCommandToVitestScript(trimmedCommand);
-      }
+    if (isVitestCommand(value)) {
+      newScripts[script] = value;
+      hasVitest = true;
+      continue;
     }
 
-    let newCommand = "";
+    const commands = splitAndTrimCommands(value);
 
-    while (commands.length) {
-      newCommand += commands.shift();
-      if (commands.length) {
-        newCommand += ` ${commands.shift()} `;
-      }
-    }
+    const transformedCommands = transformJestCommands(commands, script, modified);
+    const newCommand = transformedCommands.join(" ");
 
-    newScripts[script] = newCommand.trim();
+    newScripts[script] = newCommand;
     if (/--coverage/.test(newCommand)) {
       coverage = true;
     }
   }
 
-  if (!modified.length) {
+  if (!(modified.size || hasVitest)) {
     newScripts["test:vitest"] = "vitest";
-    modified.push("test:vitest");
+    modified.add("test:vitest");
   }
 
   return {
     commands: newScripts,
-    modified: [...new Set(modified)],
+    modified: [...modified],
     coverage,
   };
 }

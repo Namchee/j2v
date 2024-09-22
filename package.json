@@ -8,10 +8,8 @@
   },
   "scripts": {
     "test": "vitest",
-    "test:coverage": "vitest --coverage",
     "lint": "biome",
-    "build": "tsup src/main.ts --format esm --minify",
-    "list": "vitest list"
+    "build": "tsup src/main.ts --format esm --minify"
   },
   "keywords": [
     "jest",

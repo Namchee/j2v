@@ -86,7 +86,7 @@ if (!args.options.help) {
     Logger.debug(`${testFiles.length} test files found.`);
 
     const packageJsonPath = resolve(process.cwd(), "package.json");
-    let packageJson: PackageJSON = {};
+    let packageJson: PackageJSON;
     let scripts: string[] = [];
     let installed: string[] = [];
     let uninstalled: string[] = [];
@@ -127,13 +127,15 @@ if (!args.options.help) {
 
     const report = [];
 
-    let header = `Found ${testFiles.length} test file(s) that can be transformed${testFiles.length ? ":" : "."}`;
-
     if (testFiles.length) {
-      header += `\n${testFiles.map((test) => `  • ${basename(test.path)} ➜ ${test.path}`).join("\n")}`;
-    }
+      let header = `Found ${testFiles.length} test file(s) that can be transformed${testFiles.length ? ":" : "."}`;
 
-    report.push(header);
+      if (testFiles.length) {
+        header += `\n${testFiles.map((test) => `  • ${basename(test.path)} ➜ ${test.path}`).join("\n")}`;
+      }
+
+      report.push(header);
+    }
 
     if (installed.length) {
       const list = installed.map((dep) => `  • ${dep}`).join("\n");
@@ -219,7 +221,7 @@ if (!args.options.help) {
       }
 
       Logger.debug(
-        `Successfully written Vitest configuration file on ${configFilename}`,
+        `Successfully written Vitest configuration file on ${basename(configFilename)}`,
       );
 
       spinner.text = color.green(
@@ -235,11 +237,11 @@ if (!args.options.help) {
         transformedTests.map((test) => writeFile(test.path, test.content)),
       );
 
+      report[0] = `Transformed ${transformedTests.length} test file(s)${transformedTests.length ? ":" : "."}`;
       if (transformedTests.length) {
-        report[0] = `Transformed ${transformedTests.length} test file(s):\n${transformedTests.map(test => `  • ${basename(test.path)} ➜ ${test.path}`).join("\n")}`;
+        report[0] += `\n${transformedTests.map(test => `  • ${basename(test.path)} ➜ ${test.path}`).join("\n")}`;
         Logger.debug(`Succesfully transformed ${transformedTests.length} test file(s)`);
       }
-
 
       spinner.text = color.green("Tidying package dependencies...");
 
