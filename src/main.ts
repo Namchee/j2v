@@ -105,8 +105,8 @@ if (!args.options.help) {
 
       packageJson = JSON.parse(readFileSync(packageJsonPath).toString());
       const dependencies = [
-        ...Object.keys(packageJson.dependencies),
-        ...Object.keys(packageJson.devDependencies),
+        ...Object.keys(packageJson.dependencies ?? {}),
+        ...Object.keys(packageJson.devDependencies ?? {}),
       ];
 
       const scriptData = transformJestScriptsToVitest(packageJson.scripts);
