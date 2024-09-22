@@ -36,6 +36,7 @@ const cli = cac("j2v");
 cli.help();
 cli.version("0.1.0");
 cli
+  .command("[dirname]", "Working directory of the project")
   .option("--globals", "Enable Vitest global API to your test files", {
     default: false,
   })
@@ -48,6 +49,12 @@ cli
 
 const args = cli.parse();
 
+const dir = args.args[0] ?? process.cwd();
+if (!existsSync(dir)) {
+  Logger.error("Invalid path is provided. Please ensure that the input path exists and accessible.");
+  process.exit(1);
+}
+
 if (!args.options.help) {
   const spinner = ora(color.green("Finding Jest config...\n"),);
 
@@ -56,9 +63,9 @@ if (!args.options.help) {
   try {
     spinner.start();
 
-    const isTS = existsSync(resolve(process.cwd(), "tsconfig.json"));
+    const isTS = existsSync(resolve(dir, "tsconfig.json"));
 
-    const { path, config } = await getJestConfig();
+    const { path, config } = await getJestConfig(dir);
 
     Logger.debug(
       path.length
@@ -85,7 +92,7 @@ if (!args.options.help) {
 
     Logger.debug(`${testFiles.length} test files found.`);
 
-    const packageJsonPath = resolve(process.cwd(), "package.json");
+    const packageJsonPath = resolve(dir, "package.json");
     let packageJson: PackageJSON;
     let scripts: string[] = [];
     let installed: string[] = [];
@@ -117,11 +124,11 @@ if (!args.options.help) {
     }
 
     const configFilename = resolve(
-      process.cwd(),
+      dir,
       `vitest.config.${isTS ? "ts" : "js"}`,
     );
     const setupFilename = resolve(
-      process.cwd(),
+      dir,
       `vitest.setup.${isTS ? "ts" : "js"}`,
     );
 
@@ -199,7 +206,7 @@ if (!args.options.help) {
           vitestConfig.setupFiles.push(`./${setupFilename}`);
         }
 
-        const setupFilepath = resolve(process.cwd(), setupFilename);
+        const setupFilepath = resolve(dir, setupFilename);
 
         writeFileSync(setupFilepath, setupText);
 

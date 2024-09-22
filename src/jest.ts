@@ -13,9 +13,9 @@ export type JestUserConfig = {
   config: JestConfig
 }
 
-export async function getJestConfig(): Promise<JestUserConfig> {
+export async function getJestConfig(basepath: string): Promise<JestUserConfig> {
   for (const config of JEST_CONFIG) {
-    const cfgPath = resolve(process.cwd(), config);
+    const cfgPath = resolve(basepath, config);
 
     if (existsSync(cfgPath)) {
       const { default: cfg } = await tsImport(
@@ -41,24 +41,24 @@ export async function getJestConfig(): Promise<JestUserConfig> {
     }
   }
 
-  if (existsSync(resolve(process.cwd(), "jest.config.json"))) {
+  if (existsSync(resolve(basepath, "jest.config.json"))) {
     return {
-      path: resolve(process.cwd(), "jest.config.json"),
+      path: resolve(basepath, "jest.config.json"),
       config: JSON.parse(
-        readFileSync(resolve(process.cwd(), "jest.config.json")).toString(),
+        readFileSync(resolve(basepath, "jest.config.json")).toString(),
       ),
     };
   }
 
-  const packageJsonPath = resolve(process.cwd(), "package.json");
+  const packageJsonPath = resolve(basepath, "package.json");
   if (existsSync(packageJsonPath)) {
     const packageJson = JSON.parse(
-      readFileSync(resolve(process.cwd(), "package.json")).toString(),
+      readFileSync(resolve(basepath, "package.json")).toString(),
     );
 
     if ("jest" in packageJson) {
       return {
-        path: resolve(process.cwd(), "package.json"),
+        path: resolve(basepath, "package.json"),
         config: packageJson.jest,
       };
     }
