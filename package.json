@@ -43,5 +43,14 @@
     "tinyglobby": "^0.2.2",
     "ts-morph": "^23.0.0",
     "tsx": "^4.16.2"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "engines": {
+    "npm": "please-use-pnpm",
+    "yarn": "please-use-pnpm",
+    "pnpm": ">=9"
   }
 }
