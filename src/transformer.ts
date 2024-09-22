@@ -212,7 +212,7 @@ export function transformJestTestToVitest(
     });
 
     if (isVitestFile(source)) {
-      Logger.debug(`${basename(file.path)} is already a Vitest-compatible file. Skipping...`);
+      Logger.debug(`${basename(file.path)} is already a test file written in Vitest. Skipping...`);
       continue;
     }
 
@@ -286,7 +286,7 @@ export function transformJestTestToVitest(
     });
     transformedFiles.push({
       path: file.path,
-      content: source.getFullText()
+      content: source.getFullText(),
     });
 
     source.forget();
@@ -294,5 +294,5 @@ export function transformJestTestToVitest(
     Logger.debug(`Test file ${file.path} transformed successfully`);
   }
 
-  return testFiles;
+  return transformedFiles;
 }

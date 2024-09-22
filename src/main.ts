@@ -118,9 +118,7 @@ if (!args.options.help) {
 
     const report = [];
 
-    let header = args.options.dryRun
-      ? `Found ${testFiles.length} test file(s) that can be transformed${testFiles.length ? ":" : "."}`
-      : `Transformed ${testFiles.length} test file(s)${testFiles.length ? ":" : "."}`;
+    let header = `Found ${testFiles.length} test file(s) that can be transformed${testFiles.length ? ":" : "."}`;
 
     if (testFiles.length) {
       header += `\n${testFiles.map((test) => `  • ${basename(test.path)} ➜ ${test.path}`).join("\n")}`;
@@ -159,6 +157,7 @@ if (!args.options.help) {
     if (setupFile) {
       createdFiles.push(`  • ${basename(setupFilename)}`);
     }
+
     report.push(
       args.options.dryRun
         ? `File(s) that will be created:\n${createdFiles.join("\n")}`
@@ -202,9 +201,13 @@ if (!args.options.help) {
         );
       }
 
-      const configText = formatVitestConfig(vitestConfig);
+      if (existsSync(configFilename)) {
+        Logger.debug("Existing Vitest configuration already exist. Skipping...")
+      } else {
+        const configText = formatVitestConfig(vitestConfig);
 
-      writeFileSync(configFilename, configText);
+        writeFileSync(configFilename, configText);
+      }
 
       Logger.debug(
         `Successfully written Vitest configuration file on ${configFilename}`,
@@ -223,7 +226,11 @@ if (!args.options.help) {
         transformedTests.map((test) => writeFile(test.path, test.content)),
       );
 
-      Logger.debug(`Succesfully transformed ${testFiles.length} test file(s)`);
+      if (transformedTests.length) {
+        report[0] = `Transformed ${transformedTests.length} test file(s):\n${transformedTests.map(test => `  • ${basename(test.path)} ➜ ${test.path}`).join("\n")}`;
+        Logger.debug(`Succesfully transformed ${transformedTests.length} test file(s)`);
+      }
+
 
       spinner.text = color.green("Tidying package dependencies...");
 
@@ -243,7 +250,9 @@ if (!args.options.help) {
         Logger.debug("Succesfully removed unnecessary files");
       }
 
+      Logger.info("");
       Logger.info(report.join("\n\n"));
+      Logger.info("\n");
 
       spinner.succeed(
         color.green(
