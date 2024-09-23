@@ -72,11 +72,14 @@ if (!args.options.help) {
         : "Jest configuration not found. Using default configuration values.\n",
     );
 
-    spinner.stopAndPersist({ text: color.green("Configuration resolved."), symbol: "✓" });
+    await wait(5_000);
 
+    spinner.stopAndPersist({ text: color.green("Configuration resolved."), symbol: "✓" });
     spinner.start(color.cyan(
       "Configuring Vitest based on Jest configuration...\n",
     ));
+
+    await wait(5_000);
 
     const vitestConfig = transformJestConfigToVitest(
       config,
@@ -85,13 +88,12 @@ if (!args.options.help) {
 
     let setupFile: CleanupFile | undefined;
 
-    Logger.debug("Vitest configuration generated");
-
-    spinner.text = color.green("Scanning directory for test files...\n");
+    spinner.stopAndPersist({ text: color.green("Vitest configuration generated."), symbol: "✓" });
+    spinner.start(color.cyan("Scanning directory for test files...\n"));
 
     const testFiles = await getTestFiles(vitestConfig);
 
-    Logger.debug(`${testFiles.length} test files found.`);
+    spinner.stopAndPersist({ text: color.green(`${testFiles.length} test files found.`), symbol: "✓" });
 
     const packageJsonPath = resolve(dir, "package.json");
     let packageJson: PackageJSON = {};
