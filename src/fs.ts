@@ -1,4 +1,4 @@
-import { readFile } from "node:fs/promises";
+import { access, readFile } from "node:fs/promises";
 
 import { globSync } from "tinyglobby";
 
@@ -32,4 +32,14 @@ export function getTestFiles(config: UserConfig["test"]): Promise<TestFile[]> {
       content: content.toString(),
     };
   }));
+}
+
+export async function fileExist(path: string): Promise<boolean> {
+  try {
+    await access(path);
+
+    return true;
+  } catch (_) {
+    return false;
+  }
 }

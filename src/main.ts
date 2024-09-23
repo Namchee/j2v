@@ -1,7 +1,6 @@
 #! /usr/bin/env node
 
-import { existsSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { writeFile } from "node:fs/promises";
+import { readFile, rm, writeFile } from "node:fs/promises";
 import { basename, resolve } from "node:path";
 
 import cac from "cac";
@@ -21,7 +20,7 @@ import { getJestConfig } from "./jest";
 import { transformJestConfigToVitest } from "./mapper";
 
 import { detect } from "detect-package-manager";
-import { getTestFiles } from "./fs";
+import { fileExist, getTestFiles } from "./fs";
 import { transformJestScriptsToVitest } from "./scripts";
 import { type CleanupFile, constructDOMCleanupFile } from "./setup";
 import { transformJestTestToVitest } from "./transformer";
@@ -49,33 +48,35 @@ cli
 
 const args = cli.parse();
 
+const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
 const dir = args.args[0] ?? process.cwd();
-if (!existsSync(dir)) {
+if (!(await fileExist(dir))) {
   Logger.error("Invalid path is provided. Please ensure that the input path exists and accessible.");
   process.exit(1);
 }
 
 if (!args.options.help) {
-  const spinner = ora(color.green("Finding Jest config...\n"),);
+  const spinner = ora(color.cyan("Finding Jest config...\n")).start();
 
   Logger.init(args.options.debug);
 
   try {
-    spinner.start();
-
-    const isTS = existsSync(resolve(dir, "tsconfig.json"));
+    const isTS = await fileExist(resolve(dir, "tsconfig.json"));
 
     const { path, config } = await getJestConfig(dir);
 
     Logger.debug(
       path.length
-        ? `Using Jest configuration from ${path}`
-        : "Jest configuration not found. Using default configuration values.",
+        ? `Using Jest configuration from ${path}\n`
+        : "Jest configuration not found. Using default configuration values.\n",
     );
 
-    spinner.text = color.green(
+    spinner.stopAndPersist({ text: color.green("Configuration resolved."), symbol: "✓" });
+
+    spinner.start(color.cyan(
       "Configuring Vitest based on Jest configuration...\n",
-    );
+    ));
 
     const vitestConfig = transformJestConfigToVitest(
       config,
@@ -98,12 +99,13 @@ if (!args.options.help) {
     let installed: string[] = [];
     let uninstalled: string[] = [];
 
-    if (existsSync(packageJsonPath)) {
+    if (await fileExist(packageJsonPath)) {
       Logger.debug("package.json found. Jest scripts will be transformed.");
 
       spinner.text = color.green("Transforming package's scripts...\n");
+      const rawPackageJSON = await readFile(packageJsonPath);
 
-      packageJson = JSON.parse(readFileSync(packageJsonPath).toString());
+      packageJson = JSON.parse(rawPackageJSON.toString());
       const dependencies = [
         ...Object.keys(packageJson.dependencies ?? {}),
         ...Object.keys(packageJson.devDependencies ?? {}),
@@ -171,16 +173,21 @@ if (!args.options.help) {
       );
     }
 
-    const createdFiles = [`  • ${basename(configFilename)}`];
+    const createdFiles = [];
+    if (!(await fileExist(configFilename))) {
+      createdFiles.push(`  • ${basename(configFilename)}`);
+    }
     if (setupFile) {
       createdFiles.push(`  • ${basename(setupFilename)}`);
     }
 
-    report.push(
-      args.options.dryRun
-        ? `File(s) that will be created:\n${createdFiles.join("\n")}`
-        : `Created file(s):\n${createdFiles.join("\n")}`,
-    );
+    if (createdFiles.length) {
+      report.push(
+        args.options.dryRun
+          ? `File(s) that will be created:\n${createdFiles.join("\n")}`
+          : `Created file(s):\n${createdFiles.join("\n")}`,
+      );
+    }
 
     if (path) {
       report.push(
@@ -208,7 +215,7 @@ if (!args.options.help) {
 
         const setupFilepath = resolve(dir, setupFilename);
 
-        writeFileSync(setupFilepath, setupText);
+        await writeFile(setupFilepath, setupText);
 
         Logger.debug(
           `Successfully written Vitest setup file on ${setupFilepath}`,
@@ -219,12 +226,12 @@ if (!args.options.help) {
         );
       }
 
-      if (existsSync(configFilename)) {
+      if (await fileExist(configFilename)) {
         Logger.debug("Existing Vitest configuration already exist. Skipping...")
       } else {
         const configText = formatVitestConfig(vitestConfig);
 
-        writeFileSync(configFilename, configText);
+        await writeFile(configFilename, configText);
       }
 
       Logger.debug(
@@ -252,8 +259,8 @@ if (!args.options.help) {
 
       spinner.text = color.green("Tidying package dependencies...");
 
-      if (existsSync(packageJsonPath)) {
-        writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2));
+      if (await fileExist(packageJsonPath)) {
+        await writeFile(packageJsonPath, JSON.stringify(packageJson, null, 2));
 
         Logger.debug("Successfully updated package.json");
       }
@@ -269,7 +276,7 @@ if (!args.options.help) {
       if (path) {
         spinner.text = "Removing unnecessary file(s)...";
 
-        rmSync(path);
+        await rm(path);
 
         Logger.debug("Succesfully removed unnecessary files");
       }
