@@ -50,7 +50,9 @@ const args = cli.parse();
 
 const dir = args.args[0] ?? process.cwd();
 if (!(await fileExist(dir))) {
-  Logger.error("Invalid path is provided. Please ensure that the input path exists and accessible.");
+  Logger.error(
+    "Invalid path is provided. Please ensure that the input path exists and accessible.",
+  );
   process.exit(1);
 }
 
@@ -70,10 +72,13 @@ if (!args.options.help) {
         : "Jest configuration not found. Using default configuration values.\n",
     );
 
-    spinner.stopAndPersist({ text: color.green("Configuration resolved."), symbol: "✓" });
-    spinner.start(color.cyan(
-      "Configuring Vitest based on Jest configuration...\n",
-    ));
+    spinner.stopAndPersist({
+      text: color.green("Configuration resolved."),
+      symbol: "✓",
+    });
+    spinner.start(
+      color.cyan("Configuring Vitest based on Jest configuration...\n"),
+    );
 
     const vitestConfig = transformJestConfigToVitest(
       config,
@@ -82,12 +87,18 @@ if (!args.options.help) {
 
     let setupFile: CleanupFile | undefined;
 
-    spinner.stopAndPersist({ text: color.green("Vitest configuration generated."), symbol: "✓" });
+    spinner.stopAndPersist({
+      text: color.green("Vitest configuration generated."),
+      symbol: "✓",
+    });
     spinner.start(color.cyan("Scanning directory for test files...\n"));
 
     const testFiles = await getTestFiles(vitestConfig);
 
-    spinner.stopAndPersist({ text: color.green(`${testFiles.length} test files found.`), symbol: "✓" });
+    spinner.stopAndPersist({
+      text: color.green(`${testFiles.length} test files found.`),
+      symbol: "✓",
+    });
     spinner.start(color.cyan("Resolving package.json...\n"));
 
     const packageJsonPath = resolve(dir, "package.json");
@@ -98,7 +109,10 @@ if (!args.options.help) {
     let uninstalled: string[] = [];
 
     if (await fileExist(packageJsonPath)) {
-      spinner.stopAndPersist({ text: color.green("Package.json resolved successfully."), symbol: "✓" });
+      spinner.stopAndPersist({
+        text: color.green("Package.json resolved successfully."),
+        symbol: "✓",
+      });
       spinner.start(color.cyan("Transforming package scripts...\n"));
 
       const rawPackageJSON = await readFile(packageJsonPath);
@@ -109,38 +123,53 @@ if (!args.options.help) {
         ...Object.keys(packageJson.devDependencies ?? {}),
       ];
 
-      const scriptData = transformJestScriptsToVitest(packageJson.scripts ?? {});
+      const scriptData = transformJestScriptsToVitest(
+        packageJson.scripts ?? {},
+      );
       scripts = scriptData.modified;
       packageJson.scripts = scriptData.commands;
 
-      spinner.stopAndPersist({ text: color.green("Package scripts transformed."), symbol: "✓" });
+      spinner.stopAndPersist({
+        text: color.green("Package scripts transformed."),
+        symbol: "✓",
+      });
       spinner.start(color.cyan("Auditing package dependencies...\n"));
 
       installed = getNeededPackages(dependencies, scriptData, vitestConfig);
       uninstalled = getRemovedPackages(dependencies);
 
-      spinner.stopAndPersist({ text: color.green("Package dependencies audited."), symbol: "✓" });
+      spinner.stopAndPersist({
+        text: color.green("Package dependencies audited."),
+        symbol: "✓",
+      });
     } else {
-      spinner.stopAndPersist({ text: color.cyan("package.json not found, skipping scripts transformation and dependency cleanup."), symbol: "ⓘ" });
+      spinner.stopAndPersist({
+        text: color.cyan(
+          "package.json not found, skipping scripts transformation and dependency cleanup.",
+        ),
+        symbol: "ⓘ",
+      });
     }
 
     spinner.start(color.cyan("Constructing setup file...\n"));
     setupFile = constructDOMCleanupFile(vitestConfig, dependencies);
 
     if (setupFile) {
-      spinner.stopAndPersist({ text: color.green("Setup file generated."), symbol: "✓" })
+      spinner.stopAndPersist({
+        text: color.green("Setup file generated."),
+        symbol: "✓",
+      });
     } else {
-      spinner.stopAndPersist({ text: color.cyan("Test environment is not DOM, skipping setup file generation."), symbol: "ⓘ" });
+      spinner.stopAndPersist({
+        text: color.cyan(
+          "Test environment is not DOM, skipping setup file generation.",
+        ),
+        symbol: "ⓘ",
+      });
     }
 
-    const configFilename = resolve(
-      dir,
-      `vitest.config.${isTS ? "ts" : "js"}`,
-    );
-    const setupFilename = resolve(
-      dir,
-      `vitest.setup.${isTS ? "ts" : "js"}`,
-    );
+    const configFilename = resolve(dir, `vitest.config.${isTS ? "ts" : "js"}`);
+    const setupFilename = resolve(dir, `vitest.setup.${isTS ? "ts" : "js"}`);
 
     const report = [];
 
@@ -206,13 +235,14 @@ if (!args.options.help) {
     }
 
     if (args.options.dryRun) {
-      spinner.stopAndPersist({ text: color.green("Dry-run completed successfully.\n"), symbol: "✓" });
+      spinner.stopAndPersist({
+        text: color.green("Dry-run completed successfully.\n"),
+        symbol: "✓",
+      });
 
       Logger.info(report.join("\n\n"));
     } else {
-      spinner.start(color.cyan(
-        "Writing Vitest config (and setup files)...",
-      ));
+      spinner.start(color.cyan("Writing Vitest config (and setup files)..."));
 
       if (setupFile) {
         const setupText = formatSetupFile(setupFile);
@@ -226,7 +256,9 @@ if (!args.options.help) {
         await writeFile(setupFilepath, setupText);
 
         spinner.stopAndPersist({
-          text: color.green(`Successfully written Vitest setup file on ${setupFilepath}`),
+          text: color.green(
+            `Successfully written Vitest setup file on ${setupFilepath}`,
+          ),
           symbol: "✓",
         });
       }
@@ -234,18 +266,28 @@ if (!args.options.help) {
       spinner.start(color.cyan("Writing Vitest configuration file...\n"));
 
       if (await fileExist(configFilename)) {
-        spinner.stopAndPersist({ text: color.cyan("Existing Vitest configuration already exists. Skipping configuration file generation."), symbol: "ⓘ" });
+        spinner.stopAndPersist({
+          text: color.cyan(
+            "Existing Vitest configuration already exists. Skipping configuration file generation.",
+          ),
+          symbol: "ⓘ",
+        });
       } else {
         const configText = formatVitestConfig(vitestConfig);
 
         await writeFile(configFilename, configText);
 
-        spinner.stopAndPersist({ text: color.green(`Successfully written Vitest configuration file on ${basename(configFilename)}.`), symbol: "✓" });
+        spinner.stopAndPersist({
+          text: color.green(
+            `Successfully written Vitest configuration file on ${basename(configFilename)}.`,
+          ),
+          symbol: "✓",
+        });
       }
 
-      spinner.start(color.cyan(
-        `Transforming ${testFiles.length} test file(s)...\n`,
-      ));
+      spinner.start(
+        color.cyan(`Transforming ${testFiles.length} test file(s)...\n`),
+      );
 
       const transformedTests = transformJestTestToVitest(
         testFiles,
@@ -258,32 +300,55 @@ if (!args.options.help) {
 
       report[0] = `Transformed ${transformedTests.length} test file(s)${transformedTests.length ? ":" : "."}`;
       if (transformedTests.length) {
-        report[0] += `\n${transformedTests.map(test => `  • ${basename(test.path)} ➜ ${test.path}`).join("\n")}`;
+        report[0] += `\n${transformedTests.map((test) => `  • ${basename(test.path)} ➜ ${test.path}`).join("\n")}`;
 
-        spinner.stopAndPersist({ text: color.green(`Successfully transformed ${transformedTests.length} test file(s)`), symbol: "✓" });
+        spinner.stopAndPersist({
+          text: color.green(
+            `Successfully transformed ${transformedTests.length} test file(s).`,
+          ),
+          symbol: "✓",
+        });
       }
-
-      spinner.stopAndPersist({ text: color.cyan("Cleaning Dependency..."), symbol: "ⓘ" });
-      spinner.indent = 2;
-
-      const pm = await detect();
-
-      spinner.start(color.cyan("Installing required dependencies...\n"));
-      await install(pm, installed);
-      spinner.stopAndPersist({ text: color.green("Dependencies installed successfully."), symbol: "✓" });
-
-      spinner.start(color.cyan("Removing unneeded dependencies...\n"));
-      await uninstall(pm, uninstalled);
-      spinner.stopAndPersist({ text: color.green("Unneeded dependencies removed successfully."), symbol: "✓" });
-
-      spinner.indent = 0;
 
       if (await fileExist(packageJsonPath)) {
         spinner.start(color.cyan("Updating package scripts...\n"));
 
         await writeFile(packageJsonPath, JSON.stringify(packageJson, null, 2));
 
-        spinner.stopAndPersist({ text: color.green("Successfully updated package.json."), symbol: "✓" });
+        spinner.stopAndPersist({
+          text: color.green("Successfully updated package.json."),
+          symbol: "✓",
+        });
+      }
+
+      if (installed.length || uninstalled.length) {
+        spinner.stopAndPersist({
+          text: color.cyan("Cleaning Dependency..."),
+          symbol: "ⓘ",
+        });
+        spinner.indent = 2;
+
+        const pm = await detect();
+
+        if (installed.length) {
+          spinner.start(color.cyan("Installing required dependencies...\n"));
+          await install(pm, installed);
+          spinner.stopAndPersist({
+            text: color.green("Dependencies installed successfully."),
+            symbol: "✓",
+          });
+        }
+
+        if (uninstalled.length) {
+          spinner.start(color.cyan("Removing unneeded dependencies...\n"));
+          await uninstall(pm, uninstalled);
+          spinner.stopAndPersist({
+            text: color.green("Unneeded dependencies removed successfully."),
+            symbol: "✓",
+          });
+        }
+
+        spinner.indent = 0;
       }
 
       if (path) {
@@ -291,14 +356,22 @@ if (!args.options.help) {
 
         await rm(path);
 
-        spinner.stopAndPersist({ text: color.green("Jest configuration removed successfully."), symbol: "✓" });
+        spinner.stopAndPersist({
+          text: color.green("Jest configuration removed successfully."),
+          symbol: "✓",
+        });
       }
 
       Logger.info("");
       Logger.info(report.join("\n\n"));
       Logger.info("");
 
-      spinner.stopAndPersist({ symbol: "✨", text: color.green("Jest test suite converted successfully. You're good to Vitest 🚀\n") });
+      spinner.stopAndPersist({
+        symbol: "✨",
+        text: color.green(
+          "Jest test suite converted successfully. You're good to Vitest 🚀\n",
+        ),
+      });
     }
   } catch (err) {
     const error = err as Error;

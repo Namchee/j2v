@@ -17,6 +17,9 @@ importers:
       detect-package-manager:
         specifier: ^3.0.2
         version: 3.0.2
+      nanoexec:
+        specifier: ^1.1.0
+        version: 1.1.0(@types/node@20.14.12)
       ora:
         specifier: ^8.1.0
         version: 8.1.0
@@ -1127,6 +1130,11 @@ packages:
   mz@2.7.0:
     resolution: {integrity: sha512-z81GNO7nnYMEhrGh9LeymoE4+Yr0Wn5McHIZMK5cfQCl+NDX08sCZgUc9/6MHni9IWuFLm1Z3HTCXu2z9fN62Q==}
 
+  nanoexec@1.1.0:
+    resolution: {integrity: sha512-AFEBFWI+4vgstL3Czpbn8yCKBgN+b2d0qPdBCjmrOf9OOUUpLqBr+JocLJCfA5OYxKSmoOdEm6OWO5QraTNtDg==}
+    peerDependencies:
+      '@types/node': '*'
+
   nanoid@3.3.7:
     resolution: {integrity: sha512-eSRppjcPIatRIMC1U6UngP8XFcz8MQWGQdt1MTBQ7NaAmvXDfvNxbvWV3x2y6CdEUciCSsDHDQZbhYaB8QEo2g==}
     engines: {node: ^10 || ^12 || ^13.7 || ^14 || >=15.0.1}
@@ -1263,6 +1271,9 @@ packages:
     resolution: {integrity: sha512-tdN8qQGvNjw4CHbY+XXk0JgCXn9QiF21a55rBe5LJAU+kDyC4WQn4+awm2Xfk2lQMk5fKup9XgzTZtGkjBdP9Q==}
     engines: {node: '>=10.13.0'}
     hasBin: true
+
+  promise-make-naked@3.0.0:
+    resolution: {integrity: sha512-h71wwAMB2udFnlPmcxQMqKl6CckNLVKdk/ROtFivE6/VmW+rQKV0DWlGJ6VphRIoq22Tkonvdi3F+jlm5XDlow==}
 
   pseudomap@1.0.2:
     resolution: {integrity: sha512-b/YwNhb8lk1Zz2+bXXpS/LK9OisiZZ1SNsSLxN1x2OXVEhW2Ckr/7mWE5vrC1ZTiJlD9g19jWszTmJsB+oEpFQ==}
@@ -2587,6 +2598,11 @@ snapshots:
       object-assign: 4.1.1
       thenify-all: 1.6.0
 
+  nanoexec@1.1.0(@types/node@20.14.12):
+    dependencies:
+      '@types/node': 20.14.12
+      promise-make-naked: 3.0.0
+
   nanoid@3.3.7: {}
 
   normalize-path@3.0.0: {}
@@ -2684,6 +2700,8 @@ snapshots:
       source-map-js: 1.2.0
 
   prettier@2.8.8: {}
+
+  promise-make-naked@3.0.0: {}
 
   pseudomap@1.0.2: {}
 

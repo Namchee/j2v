@@ -1,11 +1,7 @@
-import { exec as execCb } from "node:child_process";
-import { promisify } from "node:util";
+import exec from "nanoexec";
 
 import type { UserConfig } from "vitest/config";
-import { Logger } from "./logger";
 import type { ScriptTransformationResult } from "./scripts";
-
-const exec = promisify(execCb);
 
 const JEST_DEPS_LIST = [
   "jest",
@@ -63,10 +59,7 @@ export async function install(
   deps: string[],
 ) {
   if (deps.length) {
-    Logger.debug( `\n${manager} ${MANAGER_COMMAND_MAP[manager].install} -D ${deps.join(" ")}`);
-    await exec(
-      `${manager} ${MANAGER_COMMAND_MAP[manager].install} -D ${deps.join(" ")}`,
-    );
+    await exec(manager, [MANAGER_COMMAND_MAP[manager].install, "-D", ...deps]);
   }
 }
 
@@ -75,9 +68,6 @@ export async function uninstall(
   deps: string[],
 ) {
   if (deps.length) {
-    Logger.debug( `\n${manager} ${MANAGER_COMMAND_MAP[manager].remove} ${deps.join(" ")}`);
-    await exec(
-      `${manager} ${MANAGER_COMMAND_MAP[manager].remove} ${deps.join(" ")}`,
-    );
+    await exec(manager, [MANAGER_COMMAND_MAP[manager].remove, ...deps]);
   }
 }
