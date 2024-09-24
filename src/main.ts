@@ -378,6 +378,6 @@ if (!args.options.help) {
 
     spinner.fail(color.red(error.message));
 
-    console.error(error);
+    Logger.debug(`${error.name}: ${error.message} \n${error.stack}`);
   }
 }
