@@ -38,6 +38,7 @@
     "@namchee/parsley": "^1.0.1",
     "cac": "^6.7.14",
     "detect-package-manager": "^3.0.2",
+    "nanoexec": "^1.1.0",
     "ora": "^8.1.0",
     "picocolors": "^1.0.1",
     "tinyglobby": "^0.2.2",

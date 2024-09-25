@@ -1,4 +1,5 @@
 import type { UserConfig } from "vitest/config";
+import { Logger } from "./logger";
 
 export type CleanupFile = {
   vitestImports: string[];
@@ -35,20 +36,27 @@ export function constructDOMCleanupFile(
   const hasPreactInstalled = packages.includes("@testing-library/preact");
 
   if (hasReactInstalled) {
+    Logger.debug("React detected. Adding cleanup for React.");
     imports.push(`import { cleanup } from '@testing-library/react';`);
   }
 
   if (hasVueInstalled) {
+    Logger.debug("Vue detected. Adding cleanup for Vue.");
     imports.push(`import { cleanup } from '@testing-library/vue';`);
   }
 
   if (hasPreactInstalled) {
+    Logger.debug("Preact detected. Adding cleanup for Preact.");
     imports.push(`import { cleanup } from '@testing-library/preact';`);
   }
 
   if (hasSvelteInstalled) {
+    Logger.debug("Svelte detected. Adding cleanup for Svelte.");
+
     const isSveltekit = packages.includes("@sveltejs/kit");
     if (isSveltekit) {
+      Logger.debug("Configuring for SvelteKit.");
+
       configImports.push(`import { sveltekit } from '@sveltejs/kit/vite';`);
       plugins.push("sveltekit()");
     } else {

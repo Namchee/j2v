@@ -1,6 +1,7 @@
-import { execSync } from "node:child_process";
+import exec from "nanoexec";
 
 import type { UserConfig } from "vitest/config";
+import { Logger } from "./logger";
 import type { ScriptTransformationResult } from "./scripts";
 
 const JEST_DEPS_LIST = [
@@ -54,24 +55,22 @@ export function getRemovedPackages(
   );
 }
 
-export function install(
+export async function install(
   manager: "npm" | "yarn" | "pnpm" | "bun",
   deps: string[],
 ) {
   if (deps.length) {
-    execSync(
-      `${manager} ${MANAGER_COMMAND_MAP[manager].install} -D ${deps.join(" ")}`,
-    );
+    Logger.debug(`Executing ${manager} ${MANAGER_COMMAND_MAP[manager].install} -D ${deps.join(" ")}\n`, 4);
+    await exec(manager, [MANAGER_COMMAND_MAP[manager].install, "-D", ...deps]);
   }
 }
 
-export function uninstall(
+export async function uninstall(
   manager: "npm" | "yarn" | "pnpm" | "bun",
   deps: string[],
 ) {
   if (deps.length) {
-    execSync(
-      `${manager} ${MANAGER_COMMAND_MAP[manager].remove} ${deps.join(" ")}`,
-    );
+    Logger.debug(`Executing ${manager} ${MANAGER_COMMAND_MAP[manager].install} ${deps.join(" ")}\n`, 4);
+    await exec(manager, [MANAGER_COMMAND_MAP[manager].remove, ...deps]);
   }
 }

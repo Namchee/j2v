@@ -9,9 +9,9 @@ export class Logger {
     Logger.instance = new Logger(verbose);
   }
 
-  public static debug(text: string) {
+  public static debug(text: string, level = 2) {
     if (Logger.instance.verbose) {
-      console.log(color.dim(`  [DEBUG] ${text}`));
+      console.log(color.dim(`${" ".repeat(level)}[DEBUG] ${text}`));
     }
   }
 
