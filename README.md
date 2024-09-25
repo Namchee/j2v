@@ -2,6 +2,8 @@
 
 All-in-one Jest to Vitest migration tool.
 
+![j2v Demo Run](./demo/demo.gif)
+
 ## Features
 
 - JavaScript / TypeScript compatible
