@@ -1,6 +1,7 @@
 import exec from "nanoexec";
 
 import type { UserConfig } from "vitest/config";
+import { Logger } from "./logger";
 import type { ScriptTransformationResult } from "./scripts";
 
 const JEST_DEPS_LIST = [
@@ -59,6 +60,7 @@ export async function install(
   deps: string[],
 ) {
   if (deps.length) {
+    Logger.debug(`Executing ${manager} ${MANAGER_COMMAND_MAP[manager].install} -D ${deps.join(" ")}\n`, 4);
     await exec(manager, [MANAGER_COMMAND_MAP[manager].install, "-D", ...deps]);
   }
 }
@@ -68,6 +70,7 @@ export async function uninstall(
   deps: string[],
 ) {
   if (deps.length) {
+    Logger.debug(`Executing ${manager} ${MANAGER_COMMAND_MAP[manager].install} ${deps.join(" ")}\n`, 4);
     await exec(manager, [MANAGER_COMMAND_MAP[manager].remove, ...deps]);
   }
 }
