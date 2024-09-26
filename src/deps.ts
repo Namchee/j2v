@@ -1,7 +1,8 @@
 import exec from "nanoexec";
 
-import type { UserConfig } from "vitest/config";
 import { Logger } from "./logger";
+
+import type { UserConfig } from "vitest/config";
 import type { ScriptTransformationResult } from "./scripts";
 
 const JEST_DEPS_LIST = [

@@ -1,8 +1,13 @@
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 
+import { Logger } from "./logger";
 import { constructDOMCleanupFile } from "./setup";
 
 describe("constructDOMCleanupFile", () => {
+  beforeAll(() => {
+    Logger.init(false);
+  });
+
   it("shouldn't construct any cleanup file if environment isn't DOM", () => {
     const cleanupFile = constructDOMCleanupFile({ environment: "node" }, [
       "vue",
