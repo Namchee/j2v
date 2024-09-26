@@ -1,6 +1,6 @@
 {
-  "name": "j2v",
-  "version": "0.1.2",
+  "name": "@namchee/j2v",
+  "version": "0.1.3",
   "type": "module",
   "description": "Jest to Vitest CLI migration tool",
   "bin": {
