@@ -1,19 +1,22 @@
 
 
 import {
+  afterEach,
+  beforeAll,
   describe,
   expect,
   it,
   vi,
 } from "vitest";
 
-import * as cp from "node:child_process";
+import exec from "nanoexec";
 
 import { getNeededPackages, getRemovedPackages, install, uninstall } from "./deps";
+import { Logger } from "./logger";
 
-vi.mock("node:child_process", () => {
+vi.mock("nanoexec", () => {
   return {
-    execSync: vi.fn(),
+    default: vi.fn(),
   };
 });
 
@@ -98,21 +101,33 @@ describe("getRemovedPackages", () => {
 });
 
 describe("install", () => {
-  it("should run execSync with provided deps", () => {
-    const spy = vi.spyOn(cp, "execSync");
+  beforeAll(() => {
+    Logger.init(false);
+  });
 
-    install("npm", ["vitest"]);
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
 
-    expect(spy).toHaveBeenCalledWith("npm install -D vitest");
+  it("should run execSync with provided deps", async () => {
+    await install("npm", ["vitest"]);
+
+    expect(exec).toHaveBeenCalledWith("npm", ["install", "-D", "vitest"]);
   });
 });
 
 describe("uninstall", () => {
-  it("should run execSync with provided deps", () => {
-    const spy = vi.spyOn(cp, "execSync");
+  beforeAll(() => {
+    Logger.init(false);
+  });
 
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("should run execSync with provided deps", () => {
     uninstall("yarn", ["jest", "@types/jest", "@jest/globals"]);
 
-    expect(spy).toHaveBeenCalledWith("yarn remove jest @types/jest @jest/globals");
+    expect(exec).toHaveBeenCalledWith("yarn", ["remove", "jest", "@types/jest", "@jest/globals"]);
   });
 })
