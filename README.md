@@ -44,13 +44,13 @@ bun add -D @namchee/j2v
 
 ```bash
 > ./dist/main.js --help
-j2v/0.1.2
+j2v/<version>
 
 Usage:
   $ j2v [dirname]
 
 Commands:
-  [dirname]  Working directory of the project
+  [dirname]  Working directory of the project (Default: `process.cwd()`)
 
 For more info, run any command with the `--help` flag:
   $ j2v --help
