@@ -8,9 +8,10 @@
   },
   "scripts": {
     "test": "vitest",
-    "lint": "biome lint",
+    "lint": "biome lint src",
     "build": "tsup src/main.ts --format esm --minify",
-    "release": "pnpm run build && changeset publish"
+    "version": "changeset version",
+    "release": "pnpm run build && changeset tag && pnpm publish"
   },
   "keywords": [
     "jest",

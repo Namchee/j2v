@@ -1,5 +1,7 @@
 # j2v
 
+[![Checked with Biome](https://img.shields.io/badge/Checked_with-Biome-60a5fa?style=flat&logo=biome)](https://biomejs.dev)
+
 All-in-one Jest to Vitest migration tool.
 
 ![j2v Demo Run](./demo/demo.gif)
