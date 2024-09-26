@@ -6,6 +6,9 @@
   "bin": {
     "j2v": "./dist/main.js"
   },
+  "files": [
+    "dist/main.js"
+  ],
   "scripts": {
     "test": "vitest",
     "lint": "biome lint src",
