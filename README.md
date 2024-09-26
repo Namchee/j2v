@@ -43,17 +43,24 @@ bun add -D @namchee/j2v
 ## Commands
 
 ```bash
-j2v/0.1.0
+> ./dist/main.js --help
+j2v/0.1.2
 
 Usage:
-  $ j2v <command> [options]
+  $ j2v [dirname]
+
+Commands:
+  [dirname]  Working directory of the project
+
+For more info, run any command with the `--help` flag:
+  $ j2v --help
 
 Options:
-  -h, --help     Display this message
-  -v, --version  Display version number
   --globals      Enable Vitest global API to your test files (default: false)
   -d, --debug    Show debugging output (default: false)
   --dry-run      Perform a dry-run of the CLI (default: false)
+  -h, --help     Display this message
+  -v, --version  Display version number
 ```
 
 ## Compatibility

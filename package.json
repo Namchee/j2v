@@ -1,6 +1,6 @@
 {
   "name": "j2v",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "type": "module",
   "description": "Jest to Vitest CLI migration tool",
   "bin": {
@@ -14,7 +14,7 @@
     "lint": "biome lint src",
     "build": "tsup src/main.ts --format esm --minify",
     "version": "changeset version",
-    "release": "pnpm run build && changeset tag && pnpm publish"
+    "publish": "pnpm run build && changeset tag && pnpm publish"
   },
   "keywords": [
     "jest",

@@ -33,7 +33,7 @@ type PackageJSON = {
 
 const cli = cac("j2v");
 cli.help();
-cli.version("0.1.0");
+cli.version("0.1.2");
 cli
   .command("[dirname]", "Working directory of the project")
   .option("--globals", "Enable Vitest global API to your test files", {
