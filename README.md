@@ -67,7 +67,7 @@ Options:
 
 Not all of Jest APIs and quirks will be replaced by this utility, as some of them don't have any equivalent property in Vitest.
 
-For the list of all compatible APIs, please see the [compatibility list](./COMPATIBILITY.md)
+For the list of all compatible APIs, please see the [compatibility list](https://github.com/Namchee/j2v/blob/master/COMPATIBILITY.md)
 
 ## Notes
 
