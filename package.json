@@ -1,6 +1,6 @@
 {
   "name": "@namchee/j2v",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "type": "module",
   "description": "Jest to Vitest CLI migration tool",
   "bin": {
@@ -25,6 +25,10 @@
     "name": "Cristopher Namchee",
     "email": "hello@namchee.dev",
     "url": "https://namchee.dev"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Namchee/j2v"
   },
   "license": "MIT",
   "devDependencies": {
