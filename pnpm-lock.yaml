@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@ast-grep/napi':
+        specifier: ^0.27.2
+        version: 0.27.2
       '@namchee/parsley':
         specifier: ^1.0.1
         version: 1.0.1
@@ -69,6 +72,64 @@ packages:
   '@ampproject/remapping@2.3.0':
     resolution: {integrity: sha512-30iZtAPgz+LTIYoeivqYo853f02jBYSd5uGnGpkFV0M3xOt9aN73erkgYAmZU43x4VfqcnLxW9Kpg3R5LC4YYw==}
     engines: {node: '>=6.0.0'}
+
+  '@ast-grep/napi-darwin-arm64@0.27.2':
+    resolution: {integrity: sha512-Rs4XH2z/j8zSZbazTeQZhRAEuKAdZMP9DnPIRNCXbvHZscWBs+iVMPw6XbJTbIQ1XsFzt4Pbwjidnm8gJxUXDw==}
+    engines: {node: '>= 10'}
+    cpu: [arm64]
+    os: [darwin]
+
+  '@ast-grep/napi-darwin-x64@0.27.2':
+    resolution: {integrity: sha512-kBIJS7tm+mmdsPVtX7LpDw3gNOwHmrFwGSmDIOpk/hT54aGvx+/R34VM1Niu4/D8iVkdl49laHpv2dTyZR922A==}
+    engines: {node: '>= 10'}
+    cpu: [x64]
+    os: [darwin]
+
+  '@ast-grep/napi-linux-arm64-gnu@0.27.2':
+    resolution: {integrity: sha512-SI+DDHkGz23XiJVYvZ+m+PuURXKGlEHtuz3tNpA6QclEsNnCcOTkICtigafndGAgkx0oB4ehRtfR90zQR1jlEQ==}
+    engines: {node: '>= 10'}
+    cpu: [arm64]
+    os: [linux]
+
+  '@ast-grep/napi-linux-arm64-musl@0.27.2':
+    resolution: {integrity: sha512-b2wAVcKJ3E23Ne7NyzBMwbtDXn3eaI59YBgbg0oJH2c4UygRTI1gd0wuopVotWtGg/fiEK21JBDeoVrNJ/ar8g==}
+    engines: {node: '>= 10'}
+    cpu: [arm64]
+    os: [linux]
+
+  '@ast-grep/napi-linux-x64-gnu@0.27.2':
+    resolution: {integrity: sha512-K7U68gMIJHLxAXAiex6CBRKsieAXLsvMgIo/RLSh46Bzr8O5z2zZbc2DamT28cke81FltbBOhYNICi68hYFegg==}
+    engines: {node: '>= 10'}
+    cpu: [x64]
+    os: [linux]
+
+  '@ast-grep/napi-linux-x64-musl@0.27.2':
+    resolution: {integrity: sha512-j437X4TaadXhUfCyYgKg1F5DD97ms02EaMJbiokUHHnCOZulqK7JD92Os9ufVwkGx2QjkEhCqBmHg+70hoczjQ==}
+    engines: {node: '>= 10'}
+    cpu: [x64]
+    os: [linux]
+
+  '@ast-grep/napi-win32-arm64-msvc@0.27.2':
+    resolution: {integrity: sha512-aK0vVIJ/k2mtQzcm/nJhAg5m/wfQlK26wJ1oqwJxvIb3ks+CpMV9BpxQ4Fkai9rzCJN1Na+6AVTFEDsircEQbg==}
+    engines: {node: '>= 10'}
+    cpu: [arm64]
+    os: [win32]
+
+  '@ast-grep/napi-win32-ia32-msvc@0.27.2':
+    resolution: {integrity: sha512-M/Tk1srYu4r/LYezeeazeRprGzUFHUoMd+pxOi6y+MBVUXhp/p95J4LHG7uYdprxuSSqGzNnr+S6AGCtiWQljg==}
+    engines: {node: '>= 10'}
+    cpu: [ia32]
+    os: [win32]
+
+  '@ast-grep/napi-win32-x64-msvc@0.27.2':
+    resolution: {integrity: sha512-E/W38ZdacIilvoobQENmOB9t8AH4p41QSk1XR0za7m3mz2O2TZQCPUXVW6f4dNemv66GWqPmun+Cynhtt+yVuw==}
+    engines: {node: '>= 10'}
+    cpu: [x64]
+    os: [win32]
+
+  '@ast-grep/napi@0.27.2':
+    resolution: {integrity: sha512-DDFPthgmNTgK4t4z2gfYeSIwxqM4KigdWnNmGSKk9S1w0L2x/Dv788MRFMUNGzFot3nEqmjrf9yQ1Sw5x5AZsw==}
+    engines: {node: '>= 10'}
 
   '@babel/code-frame@7.24.7':
     resolution: {integrity: sha512-BcYH1CVJBO9tvyIZ2jVeXgSIMvGZ2FDRvDdOIVQyuklNKSsx+eppDEBq/g47Ayw+RqNFE+URvOShmf+f/qwAlA==}
@@ -1738,6 +1799,45 @@ snapshots:
     dependencies:
       '@jridgewell/gen-mapping': 0.3.5
       '@jridgewell/trace-mapping': 0.3.25
+
+  '@ast-grep/napi-darwin-arm64@0.27.2':
+    optional: true
+
+  '@ast-grep/napi-darwin-x64@0.27.2':
+    optional: true
+
+  '@ast-grep/napi-linux-arm64-gnu@0.27.2':
+    optional: true
+
+  '@ast-grep/napi-linux-arm64-musl@0.27.2':
+    optional: true
+
+  '@ast-grep/napi-linux-x64-gnu@0.27.2':
+    optional: true
+
+  '@ast-grep/napi-linux-x64-musl@0.27.2':
+    optional: true
+
+  '@ast-grep/napi-win32-arm64-msvc@0.27.2':
+    optional: true
+
+  '@ast-grep/napi-win32-ia32-msvc@0.27.2':
+    optional: true
+
+  '@ast-grep/napi-win32-x64-msvc@0.27.2':
+    optional: true
+
+  '@ast-grep/napi@0.27.2':
+    optionalDependencies:
+      '@ast-grep/napi-darwin-arm64': 0.27.2
+      '@ast-grep/napi-darwin-x64': 0.27.2
+      '@ast-grep/napi-linux-arm64-gnu': 0.27.2
+      '@ast-grep/napi-linux-arm64-musl': 0.27.2
+      '@ast-grep/napi-linux-x64-gnu': 0.27.2
+      '@ast-grep/napi-linux-x64-musl': 0.27.2
+      '@ast-grep/napi-win32-arm64-msvc': 0.27.2
+      '@ast-grep/napi-win32-ia32-msvc': 0.27.2
+      '@ast-grep/napi-win32-x64-msvc': 0.27.2
 
   '@babel/code-frame@7.24.7':
     dependencies:

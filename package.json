@@ -43,6 +43,7 @@
     "vitest": "^2.1.1"
   },
   "dependencies": {
+    "@ast-grep/napi": "^0.27.2",
     "@namchee/parsley": "^1.0.1",
     "cac": "^6.7.14",
     "detect-package-manager": "^3.0.2",
